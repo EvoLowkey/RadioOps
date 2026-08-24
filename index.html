@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1626" />
+  <title>RadioOps — Walkie-Talkie Tracking</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="connectionBanner" class="connection-banner" hidden></div>
+  <section id="authGate" class="auth-gate">
+    <div class="auth-panel">
+      <div class="auth-brand"><div class="brand-mark">R</div><div><strong>RadioOps</strong><span>Secure Fleet Control</span></div></div>
+      <p class="eyebrow">Production access</p><h1>Sign in to RadioOps</h1>
+      <p class="auth-copy">Use your workplace account to check radios in and out and keep the fleet synchronized across devices.</p>
+      <form id="signInForm" class="auth-form">
+        <label class="field"><span>Email</span><input id="signInEmail" type="email" autocomplete="username" required placeholder="name@company.com"></label>
+        <label class="field"><span>Password</span><input id="signInPassword" type="password" autocomplete="current-password" required placeholder="Password"></label>
+        <button class="primary-btn submit-btn" type="submit">Sign in securely</button>
+        <div id="authMessage" class="form-message" role="status" aria-live="polite"></div>
+      </form>
+      <div id="setupMessage" class="setup-message" hidden><strong>Supabase setup required</strong><p>Configure the public Supabase URL and anon key before signing in. See README.md.</p></div>
+    </div>
+  </section>
+  <div class="app-frame">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-mark">R</div>
+        <div>
+          <strong>RadioOps</strong>
+          <span>Fleet Control</span>
+        </div>
+      </div>
+
+      <nav class="side-nav" aria-label="Primary">
+        <button class="nav-btn active" data-view="dashboard"><span class="nav-icon">▦</span><span>Dashboard</span></button>
+        <button class="nav-btn" data-view="checkout"><span class="nav-icon">⇄</span><span>Check Out / Return</span></button>
+        <button class="nav-btn" data-view="history"><span class="nav-icon">◷</span><span>History</span></button>
+        <button class="nav-btn" data-view="dock"><span class="nav-icon">⌁</span><span>Charging Dock</span></button>
+        <button class="nav-btn manager-only" data-view="audit"><span class="nav-icon">◎</span><span>Audit Log</span></button>
+      </nav>
+
+      <div class="sidebar-status">
+        <div class="status-orb"></div>
+        <div><strong id="systemStatusTitle">Connecting</strong><span id="systemStatusText">Secure cloud data</span></div>
+      </div>
+      <p class="sidebar-foot">POC-1 Lite • 40-radio fleet</p>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Operations Center</p>
+          <h1>Walkie-Talkie Tracking</h1>
+        </div>
+        <div class="topbar-meta">
+          <div class="time-block"><span>Local time</span><strong id="systemTime">—</strong></div>
+          <div class="operator-pill"><span class="operator-avatar" id="identityAvatar">RO</span><div><strong id="identityName">Signed out</strong><span id="identityRole">—</span></div><button id="signOutBtn" class="signout-btn" type="button">Sign out</button></div>
+        </div>
+      </header>
+
+      <main class="app-shell">
+        <section id="dashboard" class="view active-view">
+          <div id="employeeWorkspace" class="employee-workspace" hidden></div>
+          <div class="hero-panel">
+            <div>
+              <p class="eyebrow light">Fleet overview</p>
+              <h2>Good operations start with knowing where every radio is.</h2>
+              <p>Monitor assignments, charging status, overdue units, and repair needs across WT-01 through WT-40.</p>
+              <div class="hero-actions">
+                <button id="quickCheckout" class="primary-btn hero-btn" type="button">Check out a radio</button>
+                <button id="quickReturn" class="ghost-btn" type="button">Return a radio</button>
+              </div>
+            </div>
+            <div class="fleet-health" id="fleetHealth"></div>
+          </div>
+
+          <div class="stat-grid" id="statGrid"></div>
+
+          <div class="dashboard-grid">
+            <div class="card inventory-card">
+              <div class="card-header responsive-row">
+                <div>
+                  <p class="section-kicker">Live inventory</p>
+                  <h3>Radio Status</h3>
+                  <p>Current assignment and availability across the fleet.</p>
+                </div>
+                <div class="filters">
+                  <div class="search-wrap"><span>⌕</span><input id="radioSearch" type="search" placeholder="Search radio, employee, ID..." aria-label="Search radios" /></div>
+                  <select id="statusFilter" aria-label="Filter by status">
+                    <option value="ALL">All statuses</option>
+                    <option value="AVAILABLE">Available</option>
+                    <option value="IN_USE">In Use</option>
+                    <option value="OVERDUE">Overdue</option>
+                    <option value="REPAIR">Repair</option>
+                  </select>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Radio</th><th>Assigned To</th><th>Department</th><th>Checkout</th><th>Dock</th><th>Status</th><th></th></tr></thead>
+                  <tbody id="radioRows"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <aside class="activity-stack">
+              <div class="card activity-card">
+                <div class="card-header compact"><div><p class="section-kicker">Recent movement</p><h3>Activity</h3></div></div>
+                <div id="recentActivity" class="activity-list"></div>
+              </div>
+              <div class="card quick-card">
+                <p class="section-kicker">Fast actions</p>
+                <h3>Shift tools</h3>
+                <button class="action-tile" data-jump="checkout"><span>⇄</span><div><strong>Issue or return radio</strong><small>Record a handoff in seconds</small></div><b>›</b></button>
+                <button class="action-tile" data-jump="dock"><span>⌁</span><div><strong>Review charging dock</strong><small>See every slot at a glance</small></div><b>›</b></button>
+                <button class="action-tile manager-only" data-jump="audit"><span>◎</span><div><strong>Review audit log</strong><small>See protected operational events</small></div><b>›</b></button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section id="checkout" class="view">
+          <div class="page-heading">
+            <div><p class="eyebrow">Radio handoff</p><h2>Check Out / Return</h2><p>One clean workflow for every employee and every radio.</p></div>
+            <div class="page-chip">QR + manual selection</div>
+          </div>
+
+          <div class="checkout-layout">
+            <div class="card transaction-card">
+              <div class="transaction-head">
+                <div><p class="section-kicker">Transaction</p><h3 id="transactionTitle">Issue a radio</h3></div>
+                <div class="mode-toggle"><button class="mode-btn active" data-mode="out">Check Out</button><button class="mode-btn" data-mode="return">Return</button></div>
+              </div>
+              <form id="checkoutForm">
+                <div id="employeeFields" class="form-grid">
+                  <label class="field field-wide"><span>Issue to employee</span><select id="employeeTarget"><option value="">Select employee</option></select></label>
+                  <div class="identity-preview"><span>Authenticated workflow</span><strong id="targetEmployeeSummary">Employee profile data is verified by the database.</strong></div>
+                </div>
+
+                <div class="radio-select-zone">
+                  <div class="selection-copy"><span class="step-badge">2</span><div><strong>Select radio</strong><small>Scan the asset QR code or choose manually.</small></div></div>
+                  <label class="field"><span>Radio</span><select id="radioSelect"></select></label>
+                  <div class="scan-card">
+                    <div class="qr-display"><span class="qr-pattern">▦</span><strong id="qrSelectedLabel">WT-01</strong><small>Asset QR</small></div>
+                    <div class="scan-copy"><strong>Camera scan</strong><p id="scanSupport">Manual selection always works.</p><button type="button" id="scanBtn" class="secondary-btn">Open QR scanner</button></div>
+                  </div>
+                </div>
+
+                <button id="submitAssignment" class="primary-btn submit-btn" type="submit">✓ Check Out Radio</button>
+                <div id="formMessage" class="form-message" role="status" aria-live="polite"></div>
+              </form>
+            </div>
+
+            <div class="checkout-side">
+              <div class="card radio-profile-card">
+                <div class="radio-hero">
+                  <div class="radio-device"><div class="antenna"></div><div class="screen"><span>POC</span><small>4G READY</small></div><div class="speaker"></div><div class="radio-label" id="heroRadioId">WT-01</div></div>
+                </div>
+                <div class="profile-copy"><p class="section-kicker">Selected asset</p><h3>POC-1 Lite</h3><p>Each radio keeps a permanent WT asset number and a dedicated charging slot.</p></div>
+                <div class="mini-facts"><div><strong>40</strong><span>Fleet size</span></div><div><strong>2</strong><span>Dock banks</span></div><div><strong>QR</strong><span>Asset scan</span></div></div>
+              </div>
+              <div class="process-card">
+                <div><span>01</span><p><strong>Identify employee</strong><small>Name, ID and department</small></p></div>
+                <div><span>02</span><p><strong>Select radio</strong><small>QR scan or dropdown</small></p></div>
+                <div><span>03</span><p><strong>Confirm handoff</strong><small>Timestamp saved automatically</small></p></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="history" class="view">
+          <div class="page-heading"><div><p class="eyebrow">Audit trail</p><h2>Assignment History</h2><p>A clear record of who had which radio and when.</p></div><div class="page-chip">Newest first</div></div>
+          <div class="card history-card">
+            <div class="card-header"><div><p class="section-kicker">Handoff records</p><h3>Radio Assignment Log</h3><p>Completed and active assignments are preserved here.</p></div></div>
+            <div class="table-wrap"><table><thead><tr><th>Radio</th><th>Employee</th><th>ID</th><th>Department</th><th>Checked Out</th><th>Returned</th><th>State</th></tr></thead><tbody id="historyRows"></tbody></table></div>
+          </div>
+        </section>
+
+        <section id="dock" class="view">
+          <div class="page-heading"><div><p class="eyebrow">Power management</p><h2>USB-C Charging Dock</h2><p>Two 20-position banks mapped one-to-one with WT-01 through WT-40.</p></div><div class="page-chip">40 fixed slots</div></div>
+          <div class="dock-summary" id="dockSummary"></div>
+          <div class="dock-grid" id="dockBanks"></div>
+          <div class="safety-card"><span>!</span><div><strong>Charging hardware note</strong><p>This website tracks charging status only. Use manufacturer-compatible USB-C charging equipment and verify the POC-1 Lite charging requirements before building a multi-radio power dock.</p></div></div>
+        </section>
+
+        <section id="audit" class="view">
+          <div class="page-heading"><div><p class="eyebrow">Protected records</p><h2>Operational Audit Log</h2><p>Append-only events generated by secure database operations.</p></div><div class="page-chip">Manager access</div></div>
+          <div class="card history-card">
+            <div class="card-header"><div><p class="section-kicker">Accountability</p><h3>System Events</h3><p>Checkout, return, repair and dock changes are recorded here.</p></div></div>
+            <div class="table-wrap"><table><thead><tr><th>Time</th><th>Event</th><th>Radio</th><th>Actor</th><th>Details</th></tr></thead><tbody id="auditRows"></tbody></table></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <aside id="radioDrawer" class="radio-drawer" aria-hidden="true">
+    <div class="drawer-head"><div><p class="section-kicker">Radio details</p><h3 id="drawerRadioId">WT-01</h3></div><button id="closeDrawer" class="icon-btn" aria-label="Close radio details">×</button></div>
+    <div id="drawerContent"></div>
+  </aside>
+  <div id="drawerBackdrop" class="drawer-backdrop"></div>
+
+  <dialog id="scannerDialog">
+    <div class="dialog-head"><div><p class="section-kicker light">Asset scanner</p><h3>Scan Radio QR</h3></div><button id="closeScanner" class="icon-btn">×</button></div>
+    <div class="scanner-frame"><video id="scannerVideo" playsinline muted></video><div class="scan-reticle"></div></div>
+    <p id="scannerStatus">Point the camera at a WT-01 through WT-40 QR code.</p>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="runtime-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
