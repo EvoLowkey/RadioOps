@@ -230,6 +230,6 @@ This release adds secure per-radio QR bearer tokens, the one-time Radio & Equipm
 
 ### Return reminders
 
-The app computes return status from server-side shift due times. While the web app/PWA is open, it refreshes the active assignment and can display an in-app reminder and browser notification (when notification permission has been granted) 15 minutes before shift end and at shift end. A fully background push notification when the app is closed would require a future push-subscription/server-delivery service and is not claimed by this release.
+The app computes return status from server-side shift due times. While the web app/PWA is open, it refreshes the active assignment and can display an in-app reminder and browser notification (when notification permission has been granted) 30 minutes before shift end, 15 minutes before shift end, and at shift end. A fully background push notification when the app is closed would require a future push-subscription/server-delivery service and is not claimed by this release.
 
 `Tip Release Pending` is an operational management flag only. Valet Radio HQ does not connect to payroll/timeclock systems, automatically withhold tips, deduct wages, or determine financial liability.

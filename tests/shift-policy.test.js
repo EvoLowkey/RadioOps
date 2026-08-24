@@ -15,10 +15,11 @@ test('resolves overnight shift across midnight in America Chicago',()=>{
   assert.equal(new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',day:'numeric'}).format(new Date(w.endsAt)),'25');
 });
 
-test('return reminder state changes at 15 minutes and shift end',()=>{
+test('return reminder state changes at 30 minutes, 15 minutes, and shift end',()=>{
   const w=resolveShiftWindow('PM','2026-08-24','America/Chicago');
-  assert.equal(getReturnReminderState(new Date(new Date(w.reminderAt).getTime()-1000),w),'none');
-  assert.equal(getReturnReminderState(new Date(w.reminderAt),w),'fifteen_minutes');
+  assert.equal(getReturnReminderState(new Date(new Date(w.reminder30At).getTime()-1000),w),'none');
+  assert.equal(getReturnReminderState(new Date(w.reminder30At),w),'thirty_minutes');
+  assert.equal(getReturnReminderState(new Date(w.reminder15At),w),'fifteen_minutes');
   assert.equal(getReturnReminderState(new Date(new Date(w.endsAt).getTime()-1000),w),'fifteen_minutes');
   assert.equal(getReturnReminderState(new Date(w.endsAt),w),'shift_ended');
 });

@@ -25,11 +25,11 @@ export function resolveShiftWindow(shiftCode,selectedDate,timeZone='America/Chic
   const def=SHIFT_DEFINITIONS[shiftCode]; if(!def) throw new Error('Invalid shift');
   const endDate=def.crossesMidnight?addDays(selectedDate,1):selectedDate;
   const startsAt=zonedDate(selectedDate,def.start,timeZone),endsAt=zonedDate(endDate,def.end,timeZone);
-  return {code:shiftCode,label:def.label,startsAt:startsAt.toISOString(),endsAt:endsAt.toISOString(),reminderAt:new Date(endsAt.getTime()-15*60*1000).toISOString()};
+  return {code:shiftCode,label:def.label,startsAt:startsAt.toISOString(),endsAt:endsAt.toISOString(),reminder30At:new Date(endsAt.getTime()-30*60*1000).toISOString(),reminder15At:new Date(endsAt.getTime()-15*60*1000).toISOString(),reminderAt:new Date(endsAt.getTime()-15*60*1000).toISOString()};
 }
 export function getReturnReminderState(now,shiftWindow){
-  const t=new Date(now).getTime(),end=new Date(shiftWindow.endsAt).getTime(),reminder=new Date(shiftWindow.reminderAt).getTime();
-  if(t>=end)return 'shift_ended'; if(t>=reminder)return 'fifteen_minutes'; return 'none';
+  const t=new Date(now).getTime(),end=new Date(shiftWindow.endsAt).getTime(),reminder30=new Date(shiftWindow.reminder30At||new Date(end-30*60*1000)).getTime(),reminder15=new Date(shiftWindow.reminder15At||shiftWindow.reminderAt).getTime();
+  if(t>=end)return 'shift_ended'; if(t>=reminder15)return 'fifteen_minutes'; if(t>=reminder30)return 'thirty_minutes'; return 'none';
 }
 
 export function getShiftWorkDate(shiftCode,now=new Date()){

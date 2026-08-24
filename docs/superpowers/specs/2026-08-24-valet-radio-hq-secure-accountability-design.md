@@ -82,7 +82,7 @@ radio-accountability purposes.
 ## 4. Return reminders and shift completion
 
 If the employee still has a radio assigned, Valet Radio HQ sends/queues
-a return reminder 15 minutes before the selected shift ends and another
+return reminders 30 minutes and 15 minutes before the selected shift ends and another
 at shift end.
 
 Example pre-end notification:
