@@ -138,3 +138,10 @@ The suite covers fleet behavior, API RPC contracts, approval migration safeguard
 
 ## Employee department
 New self-registered employee accounts are automatically assigned to the **Valet Associate** department. Employees cannot change this value during signup. Manager accounts and existing manager departments are not modified.
+
+## Manager promotion update
+After the employee/Valet migrations have been applied, run:
+
+`supabase/migrations/202608230004_manager_roles.sql`
+
+This adds Manager promotion/demotion controls. Employee ID `1001` is marked as the protected Primary Manager during this migration. Active approved Valet Associate accounts can be promoted to `MANAGER` and `Management`; non-primary managers can be demoted back to `EMPLOYEE` and `Valet Associate`. The Primary Manager and the last remaining active Manager cannot be demoted.
