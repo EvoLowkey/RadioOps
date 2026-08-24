@@ -6,6 +6,10 @@
       "destination": "/auth/callback.html"
     },
     {
+      "source": "/auth/reset-password",
+      "destination": "/auth/reset-password.html"
+    },
+    {
       "source": "/runtime-config.js",
       "destination": "/api/runtime-config"
     }

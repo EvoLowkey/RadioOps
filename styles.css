@@ -43,3 +43,6 @@ dialog{border:0;border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,.35);paddin
 @media(max-width:760px){.install-app-btn{padding:7px 8px;font-size:8px}.ios-install-guide{margin:8px 12px 0}.auth-callback-card{padding:26px 21px}.callback-state h1{font-size:26px}.auth-callback-shell{align-items:start;padding-top:max(24px,calc(env(safe-area-inset-top) + 18px))}}
 
 .verification-success-banner,.verified-login-banner{background:#e9f8ef;border:1px solid #bfe5cd;color:#1f6b43;border-radius:13px;padding:12px 14px;margin-bottom:18px;font-size:11px;font-weight:800;line-height:1.45}.verified-login-banner{display:grid;gap:2px}.verified-login-banner strong{font-size:12px}.verified-login-banner span{font-size:10px;font-weight:700;color:#397657}.verification-success-banner{margin-top:2px;margin-bottom:20px}
+
+/* Valet Ops HQ authentication recovery */
+.auth-inline-actions{display:flex;justify-content:flex-end;margin-top:-3px;margin-bottom:3px}.auth-link-btn{border:0;background:transparent;color:#215f9f;font-size:10px;font-weight:850;padding:4px 0;cursor:pointer}.auth-link-btn:hover,.auth-link-btn:focus-visible{text-decoration:underline;outline:none}.auth-back-btn{width:100%;min-height:42px}.reset-password-form{margin-top:18px}.callback-icon.reset{background:#e8f1fb;color:#225f9f}

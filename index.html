@@ -4,23 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0b1626" />
-  <meta name="application-name" content="RadioOps" />
+  <meta name="application-name" content="Valet Ops HQ" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="RadioOps" />
+  <meta name="apple-mobile-web-app-title" content="Valet Ops HQ" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-  <title>RadioOps — Walkie-Talkie Tracking</title>
+  <title>Valet Ops HQ — Radio Fleet Management</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="connectionBanner" class="connection-banner" hidden></div>
-  <div id="offlineBanner" class="offline-banner" hidden>RadioOps is offline. Fleet actions are unavailable until your connection returns.</div>
+  <div id="offlineBanner" class="offline-banner" hidden>Valet Ops HQ is offline. Fleet actions are unavailable until your connection returns.</div>
   <section id="authGate" class="auth-gate">
     <div class="auth-panel">
-      <div id="verifiedLoginBanner" class="verified-login-banner" role="status" aria-live="polite" hidden><strong>✓ Email successfully verified</strong><span>Your email has been successfully verified. You can now log in to RadioOps.</span></div>
-      <div class="auth-brand"><div class="brand-mark">R</div><div><strong>RadioOps</strong><span>Secure Fleet Control</span></div></div>
-      <p class="eyebrow">Production access</p><h1 id="authTitle">Sign in to RadioOps</h1>
+      <div id="verifiedLoginBanner" class="verified-login-banner" role="status" aria-live="polite" hidden><strong>✓ Email successfully verified</strong><span>Your email has been successfully verified. You can now log in to Valet Ops HQ.</span></div>
+      <div class="auth-brand"><div class="brand-mark">V</div><div><strong>Valet Ops HQ</strong><span>Valet Operations &amp; Equipment Management</span></div></div>
+      <p class="eyebrow">Secure employee access</p><h1 id="authTitle">Sign in to Valet Ops HQ</h1>
       <p class="auth-copy" id="authCopy">Use your workplace account to check radios in and out and keep the fleet synchronized across devices.</p>
       <div class="auth-tabs" role="tablist" aria-label="Authentication options">
         <button id="authSignInTab" class="auth-tab active" type="button">Sign In</button>
@@ -29,7 +29,13 @@
       <form id="signInForm" class="auth-form">
         <label class="field"><span>Email</span><input id="signInEmail" type="email" autocomplete="username" required placeholder="name@example.com"></label>
         <label class="field"><span>Password</span><input id="signInPassword" type="password" autocomplete="current-password" required placeholder="Password"></label>
+        <div class="auth-inline-actions"><button id="forgotPasswordBtn" class="auth-link-btn" type="button">Forgot password?</button></div>
         <button class="primary-btn submit-btn" type="submit">Sign in securely</button>
+      </form>
+      <form id="forgotPasswordForm" class="auth-form" hidden>
+        <label class="field"><span>Email</span><input id="forgotPasswordEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+        <button class="primary-btn submit-btn" type="submit">Send password reset email</button>
+        <button id="backToSignInBtn" class="secondary-btn auth-back-btn" type="button">Back to Sign In</button>
       </form>
       <form id="signUpForm" class="auth-form signup-form" hidden>
         <div class="signup-grid">
@@ -40,7 +46,7 @@
           <label class="field"><span>Password</span><input id="signUpPassword" type="password" autocomplete="new-password" required placeholder="Create password"></label>
           <label class="field"><span>Confirm password</span><input id="signUpConfirmPassword" type="password" autocomplete="new-password" required placeholder="Repeat password"></label>
         </div>
-        <div class="signup-notice"><strong>Manager approval required</strong><span>Creating an account does not grant fleet access. A RadioOps Manager must approve your request.</span></div>
+        <div class="signup-notice"><strong>Manager approval required</strong><span>Creating an account does not grant fleet access. A Valet Ops HQ Manager must approve your request.</span></div>
         <button class="primary-btn submit-btn" type="submit">Create employee account</button>
       </form>
       <div id="authMessage" class="form-message" role="status" aria-live="polite"></div>
@@ -49,7 +55,7 @@
   </section>
   <section id="accountGate" class="account-gate" hidden>
     <div class="account-gate-card">
-      <div class="auth-brand"><div class="brand-mark">R</div><div><strong>RadioOps</strong><span>Employee Access</span></div></div>
+      <div class="auth-brand"><div class="brand-mark">V</div><div><strong>Valet Ops HQ</strong><span>Employee Access</span></div></div>
       <div id="accountGateIcon" class="account-state-icon">◷</div>
       <p class="eyebrow" id="accountGateEyebrow">Account status</p>
       <h1 id="accountGateTitle">Account awaiting approval</h1>
@@ -61,10 +67,10 @@
   <div class="app-frame">
     <aside class="sidebar">
       <div class="brand-block">
-        <div class="brand-mark">R</div>
+        <div class="brand-mark">V</div>
         <div>
-          <strong>RadioOps</strong>
-          <span>Fleet Control</span>
+          <strong>Valet Ops HQ</strong>
+          <span>RadioOps • Fleet Control</span>
         </div>
       </div>
 
@@ -106,7 +112,7 @@
           </div>
         </div>
       </header>
-      <div id="iosInstallGuide" class="ios-install-guide" hidden><strong>Add RadioOps to your Home Screen</strong><span>In Safari, tap Share, then choose <b>Add to Home Screen</b>.</span><button id="dismissIosInstall" type="button" aria-label="Dismiss install guide">×</button></div>
+      <div id="iosInstallGuide" class="ios-install-guide" hidden><strong>Add Valet Ops HQ to your Home Screen</strong><span>In Safari, tap Share, then choose <b>Add to Home Screen</b>.</span><button id="dismissIosInstall" type="button" aria-label="Dismiss install guide">×</button></div>
 
       <main class="app-shell">
         <section id="employeeHome" class="view employee-only">

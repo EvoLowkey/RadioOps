@@ -1,7 +1,7 @@
 {
-  "name": "RadioOps",
-  "short_name": "RadioOps",
-  "description": "Secure workplace radio checkout, return, charging, and employee access management.",
+  "name": "Valet Ops HQ",
+  "short_name": "Valet Ops HQ",
+  "description": "Valet operations and equipment management, including secure RadioOps fleet checkout, QR-verified returns, charging, and employee access.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -10,7 +10,17 @@
   "theme_color": "#0b1626",
   "orientation": "portrait-primary",
   "icons": [
-    {"src":"/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
-    {"src":"/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }

@@ -7,7 +7,7 @@ const read=p=>fs.readFileSync(new URL(p,root),'utf8');
 
 test('manifest and PWA metadata are present',()=>{
   const manifest=JSON.parse(read('manifest.webmanifest'));
-  assert.equal(manifest.name,'RadioOps');
+  assert.equal(manifest.name,'Valet Ops HQ');
   assert.equal(manifest.display,'standalone');
   assert.equal(manifest.start_url,'/');
   assert.ok(manifest.icons.some(i=>i.sizes==='192x192'));
