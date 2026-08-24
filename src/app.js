@@ -24,6 +24,17 @@ function showToast(text){const el=$('#toast');if(!el)return;el.textContent=text;
 function showMessage(text,type='success'){const el=$('#formMessage');if(!el)return;el.textContent=text;el.className=`form-message ${type}`;}
 function employeeMessage(text,type='success'){const el=$('#employeeActionMessage');if(!el)return;el.textContent=text;el.className=`form-message ${type}`;}
 function authMessage(text,type='error'){const el=$('#authMessage');if(!el)return;el.textContent=text;el.className=`form-message ${type}`;}
+function showVerifiedLoginNotice(){
+  const params=new URLSearchParams(window.location.search);
+  const banner=$('#verifiedLoginBanner');
+  if(!banner)return;
+  const verified=params.get('verified')==='1';
+  banner.hidden=!verified;
+  if(verified){
+    setAuthMode('signin');
+    try{history.replaceState({},document.title,window.location.pathname);}catch{}
+  }
+}
 function setConnection(kind,text){
   const banner=$('#connectionBanner');
   if($('#systemStatusTitle'))$('#systemStatusTitle').textContent=kind==='ok'?'System Online':kind==='loading'?'Syncing':'Connection Issue';
@@ -145,7 +156,7 @@ async function refreshProfileStatus(){if(!session)return;try{profile=await api.l
 async function establishSession(nextSession){session=nextSession;cleanupSubscriptions();if(!session){profile=null;profiles=[];state={radios:[],history:[]};showSignedOut();return;}try{profile=await api.loadProfile(session.user.id);const gate=getAccountGate(profile);if(gate!=='ACTIVE'){renderAccountGate(gate);return;}showActiveApp();await loadData();unsubscribeFleet=api.subscribeFleet(()=>{clearTimeout(refreshTimer);refreshTimer=setTimeout(async()=>{try{profile=await api.loadProfile(session.user.id);if(getAccountGate(profile)!=='ACTIVE'){renderAccountGate(getAccountGate(profile));return;}await loadData({quiet:true});}catch{}},200);});}catch(err){authMessage(humanError(err));await api.signOut().catch(()=>{});session=null;profile=null;showSignedOut();}}
 async function signOut(){cleanupSubscriptions();await api?.signOut();session=null;profile=null;showSignedOut();}
 
-async function bootstrap(){updateClock();setInterval(updateClock,30000);showSignedOut();try{client=createConfiguredSupabaseClient(globalThis);api=createRadioOpsApi(client);$('#setupMessage').hidden=true;setConnection('loading','Waiting for secure sign-in');const current=await api.getSession();if(current)await establishSession(current);client.auth.onAuthStateChange((_event,nextSession)=>{if(nextSession?.user?.id!==session?.user?.id||(!nextSession&&session))establishSession(nextSession);});}catch(err){$('#setupMessage').hidden=false;authMessage(humanError(err));setConnection('error',humanError(err));}}
+async function bootstrap(){updateClock();setInterval(updateClock,30000);showSignedOut();showVerifiedLoginNotice();try{client=createConfiguredSupabaseClient(globalThis);api=createRadioOpsApi(client);$('#setupMessage').hidden=true;setConnection('loading','Waiting for secure sign-in');const current=await api.getSession();if(current)await establishSession(current);client.auth.onAuthStateChange((_event,nextSession)=>{if(nextSession?.user?.id!==session?.user?.id||(!nextSession&&session))establishSession(nextSession);});}catch(err){$('#setupMessage').hidden=false;authMessage(humanError(err));setConnection('error',humanError(err));}}
 
 $('#authSignInTab').addEventListener('click',()=>setAuthMode('signin'));$('#authSignUpTab').addEventListener('click',()=>setAuthMode('signup'));
 $('#signInForm').addEventListener('submit',async e=>{e.preventDefault();if(!api){authMessage('Supabase is not configured yet. See README.md.');return;}authMessage('Signing in…','success');try{const data=await api.signIn($('#signInEmail').value.trim(),$('#signInPassword').value);await establishSession(data.session||null);authMessage('','');}catch(err){authMessage(humanError(err));}});

@@ -19,3 +19,16 @@ test('callback has branded success and error states without token output',()=>{
   assert.doesNotMatch(js,/textContent\s*=\s*.*access_token/);
   assert.doesNotMatch(js,/innerHTML\s*=\s*.*refresh_token/);
 });
+
+
+test('successful verification shows a clear top login-ready message',()=>{
+  const callbackHtml=read('auth/callback.html');
+  const indexHtml=read('index.html');
+  const app=read('src/app.js');
+  assert.match(callbackHtml,/id=["']verificationSuccessBanner["']/);
+  assert.match(callbackHtml,/Your email has been successfully verified\. You can now log in to RadioOps\./);
+  assert.match(callbackHtml,/href=["']\/\?verified=1["'][^>]*>Log In</);
+  assert.match(indexHtml,/id=["']verifiedLoginBanner["']/);
+  assert.match(app,/URLSearchParams/);
+  assert.match(app,/verified/);
+});

@@ -17,7 +17,8 @@
         <div class="callback-spinner" aria-hidden="true"></div><p class="eyebrow">Verifying account</p><h1>Finishing email verification…</h1><p>Please wait while RadioOps confirms your email.</p>
       </div>
       <div id="callbackSuccess" class="callback-state" hidden>
-        <div class="callback-icon success" aria-hidden="true">✓</div><p class="eyebrow">Email confirmed</p><h1>Email verified successfully</h1><p>Your email is verified. You can now sign in to RadioOps. Your account may still require manager approval before fleet access is enabled.</p><a class="primary-btn callback-action" href="/?verified=1">Continue to Sign In</a>
+        <div id="verificationSuccessBanner" class="verification-success-banner" role="status">✓ Your email has been successfully verified. You can now log in to RadioOps.</div>
+        <div class="callback-icon success" aria-hidden="true">✓</div><p class="eyebrow">Email confirmed</p><h1>Email verified successfully</h1><p>Your email is verified and ready to use. A RadioOps Manager may still need to approve your account before fleet access is enabled.</p><a class="primary-btn callback-action" href="/?verified=1">Log In</a>
       </div>
       <div id="callbackError" class="callback-state" hidden>
         <div class="callback-icon error" aria-hidden="true">!</div><p class="eyebrow">Verification issue</p><h1>We couldn't verify this email link.</h1><p>The verification link may be expired, incomplete, or already used. Return to RadioOps and sign in; if your email is not verified, request a new verification email.</p><a class="primary-btn callback-action" href="/">Return to Sign In</a>
