@@ -37,6 +37,7 @@ export function createRadioOpsApi(client){
     async listAssignments(profileId=null){ let q=client.from('assignments').select('*'); if(profileId) q=q.eq('profile_id',profileId); return unwrap(await q.order('checkout_at',{ascending:false}),'Unable to load assignments') || []; },
     async listAuditEvents(){ return unwrap(await client.from('audit_events').select('*').order('created_at',{ascending:false}),'Unable to load audit events') || []; },
     async checkoutRadio(radioId,targetProfileId,expectedReturnAt=null){ return unwrap(await client.rpc('checkout_radio',{p_radio_id:radioId,p_target_profile_id:targetProfileId,p_expected_return_at:expectedReturnAt}),'Checkout failed'); },
+    async checkoutRadioVerified(radioId,expectedReturnAt=null){ return unwrap(await client.rpc('checkout_radio_verified',{p_radio_id:radioId,p_expected_return_at:expectedReturnAt}),'QR verified checkout failed'); },
     async returnRadio(radioId){ return unwrap(await client.rpc('return_radio',{p_radio_id:radioId}),'Return failed'); },
     async returnRadioVerified(radioId){ return unwrap(await client.rpc('return_radio_verified',{p_radio_id:radioId}),'QR verified return failed'); },
     async setRepairState(radioId,inRepair){ return unwrap(await client.rpc('set_radio_repair',{p_radio_id:radioId,p_in_repair:Boolean(inRepair)}),'Repair update failed'); },

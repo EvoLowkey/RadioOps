@@ -118,14 +118,14 @@
 
       <main class="app-shell">
         <section id="employeeHome" class="view employee-only">
-          <div class="employee-portal-head"><div><p class="eyebrow">Employee workspace</p><h2>My Radio</h2><p>Check out what you need, return it when your shift is done.</p></div><div class="page-chip">Simple self-service</div></div>
+          <div class="employee-portal-head"><div><p class="eyebrow">Employee workspace</p><h2>My Radio</h2><p>Scan the physical radio you are taking, then scan the same radio when you return it.</p></div><div class="page-chip">Simple self-service</div></div>
           <div class="employee-portal-grid">
             <div class="employee-radio-main card">
               <div class="employee-radio-status" id="employeeMyRadio"></div>
               <div class="employee-count-card"><span>Radios available now</span><strong id="employeeAvailableCount">—</strong></div>
               <div id="employeeCheckoutArea" class="employee-checkout-area">
-                <label class="field"><span>Select an available radio</span><select id="employeeRadioSelect"></select></label>
-                <div class="employee-action-row"><button id="employeeScanBtn" class="secondary-btn" type="button">Scan Radio QR</button><button id="employeeCheckoutBtn" class="primary-btn" type="button">Check Out</button></div>
+                <div class="scan-required-card"><strong>Physical radio scan required</strong><span>Pick up the radio you are taking, then scan its QR code. Manual radio selection is disabled for employees.</span></div>
+                <button id="employeeScanBtn" class="primary-btn employee-scan-checkout-btn" type="button">Scan Radio to Check Out</button>
               </div>
               <button id="employeeReturnBtn" class="primary-btn employee-return-btn" type="button" hidden>Scan QR to Return</button>
               <div id="employeeActionMessage" class="form-message" role="status" aria-live="polite"></div>

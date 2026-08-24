@@ -6,7 +6,7 @@ import { getEmployeeWorkspace } from '../src/view-models.js';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 
 test('employee workspace surface exists',()=>{
-  for(const id of ['employeeHome','employeeMyRadio','employeeAvailableCount','employeeRadioSelect','employeeCheckoutBtn','employeeReturnBtn','employeeRecentHistory'])
+  for(const id of ['employeeHome','employeeMyRadio','employeeAvailableCount','employeeScanBtn','employeeReturnBtn','employeeRecentHistory'])
     assert.match(html,new RegExp(`id=["']${id}["']`),`missing ${id}`);
 });
 
