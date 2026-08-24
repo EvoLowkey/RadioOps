@@ -81,7 +81,9 @@
         <button class="nav-btn" data-view="history"><span class="nav-icon">◷</span><span>History</span></button>
         <button class="nav-btn" data-view="dock"><span class="nav-icon">⌁</span><span>Charging Dock</span></button>
         <button class="nav-btn employee-only" data-view="employeeHome"><span class="nav-icon">⌁</span><span>My Radio</span></button>
+        <button class="nav-btn operational-readonly" data-view="operationalRead" hidden><span class="nav-icon">◷</span><span>Radio Status</span></button>
         <button class="nav-btn manager-only" data-view="employees"><span class="nav-icon">♙</span><span>Employees</span></button>
+        <button class="nav-btn manager-only" data-view="accountabilityAdmin"><span class="nav-icon">⚑</span><span>Accountability</span></button>
         <button class="nav-btn manager-only" data-view="audit"><span class="nav-icon">◎</span><span>Audit Log</span></button>
         <button class="nav-btn shared-nav" data-view="help"><span class="nav-icon">?</span><span>Help &amp; Support</span></button>
       </nav>
@@ -124,14 +126,26 @@
               <div class="employee-radio-status" id="employeeMyRadio"></div>
               <div class="employee-count-card"><span>Radios available now</span><strong id="employeeAvailableCount">—</strong></div>
               <div id="employeeCheckoutArea" class="employee-checkout-area">
-                <div class="scan-required-card"><strong>Physical radio scan required</strong><span>Pick up the radio you are taking, then scan its QR code. Manual radio selection is disabled for employees.</span></div>
-                <button id="employeeScanBtn" class="primary-btn employee-scan-checkout-btn" type="button">Scan Radio to Check Out</button>
+                <div class="shift-selection-card"><strong>Select today’s scheduled shift</strong><span>Choose the shift you are already scheduled to work.</span><div class="shift-choice-grid">
+                  <button id="shiftAM" class="shift-choice" type="button" data-shift="AM"><b>AM Shift</b><span>6:55 AM – 3:00 PM</span></button>
+                  <button id="shiftPM" class="shift-choice" type="button" data-shift="PM"><b>PM Shift</b><span>3:00 PM – 11:00 PM</span></button>
+                  <button id="shiftOvernight" class="shift-choice" type="button" data-shift="OVERNIGHT"><b>Overnight Shift</b><span>11:00 PM – 7:00 AM</span></button>
+                </div></div>
+                <div class="scan-required-card"><strong>Physical radio scan required</strong><span>Pick up the radio you are taking, then scan its secure QR code. Manual radio selection is disabled for employees.</span></div>
+                <button id="employeeScanBtn" class="primary-btn employee-scan-checkout-btn" type="button" disabled>Scan Radio to Check Out</button>
               </div>
               <button id="employeeReturnBtn" class="primary-btn employee-return-btn" type="button" hidden>Scan QR to Return</button>
-              <div id="employeeActionMessage" class="form-message" role="status" aria-live="polite"></div>
+              <div id="employeeReturnAlert" class="employee-return-alert" role="status" aria-live="assertive" hidden></div><div id="employeeActionMessage" class="form-message" role="status" aria-live="polite"></div>
             </div>
             <aside class="card employee-history-card"><p class="section-kicker">My recent activity</p><h3>Last 5 assignments</h3><div id="employeeRecentHistory" class="employee-history-list"></div></aside>
           </div>
+          <aside class="card employee-history-card"><p class="section-kicker">Accountability</p><h3>My Notices</h3><div id="employeeNotices" class="employee-history-list"></div></aside>
+        </section>
+
+        <section id="operationalRead" class="view operational-readonly" hidden>
+          <div class="page-heading"><div><p class="eyebrow">Operational visibility</p><h2>Radio Status &amp; History</h2><p>Read-only access for GSC Captains and Cashiers.</p></div><div class="page-chip">Read only</div></div>
+          <div class="card"><div class="card-header"><div><p class="section-kicker">Currently checked out</p><h3>Active Radio Holders</h3></div></div><div id="operationalCheckedOut" class="employee-history-list"></div></div>
+          <div class="card"><div class="card-header"><div><p class="section-kicker">Radio history</p><h3>Recent Assignments</h3></div></div><div id="operationalHistory" class="employee-history-list"></div></div>
         </section>
 
         <section id="dashboard" class="view active-view manager-view">
@@ -269,7 +283,7 @@
                   <label class="field"><span>Radio</span><select id="radioSelect"></select></label>
                   <div class="scan-card">
                     <div class="qr-display"><span class="qr-pattern">▦</span><strong id="qrSelectedLabel">WT-01</strong><small>Asset QR</small></div>
-                    <div class="scan-copy"><strong>Camera scan</strong><p id="scanSupport">Manual selection always works.</p><button type="button" id="scanBtn" class="secondary-btn">Open QR scanner</button></div>
+                    <div class="scan-copy"><strong>Camera scan</strong><p id="scanSupport">Camera scanning is available for Managers. Employee checkout and return require a secure radio QR scan.</p><button type="button" id="scanBtn" class="secondary-btn">Open QR scanner</button></div>
                   </div>
                 </div>
 
@@ -288,7 +302,7 @@
               </div>
               <div class="process-card">
                 <div><span>01</span><p><strong>Identify employee</strong><small>Name, ID and department</small></p></div>
-                <div><span>02</span><p><strong>Select radio</strong><small>QR scan or dropdown</small></p></div>
+                <div><span>02</span><p><strong>Scan radio</strong><small>Secure QR checkout</small></p></div>
                 <div><span>03</span><p><strong>Confirm handoff</strong><small>Timestamp saved automatically</small></p></div>
               </div>
             </div>
@@ -319,6 +333,13 @@
           </div>
         </section>
 
+        <section id="accountabilityAdmin" class="view manager-only">
+          <div class="page-heading"><div><p class="eyebrow">Secure accountability</p><h2>QR Labels &amp; Incident Management</h2><p>Manage secure radio identities, return exceptions, and corrective-action records.</p></div><div class="page-chip">Manager only</div></div>
+          <div class="card"><div class="card-header responsive-row"><div><p class="section-kicker">Secure QR identities</p><h3>Radio Labels WT-01–WT-40</h3><p>Regenerating a QR immediately invalidates the previous label.</p></div><button id="generateAllQrBtn" class="primary-btn" type="button">Generate / Rotate All 40 Labels</button></div><div id="qrAdminRows" class="qr-admin-grid"></div></div>
+          <div class="card"><div class="card-header"><div><p class="section-kicker">Exceptions</p><h3>Recent Radio Incidents</h3></div></div><div id="managerIncidentRows" class="employee-history-list"></div></div>
+          <div class="card"><div class="card-header"><div><p class="section-kicker">Corrective action</p><h3>Warnings &amp; Write-Ups</h3></div></div><div id="managerDisciplineRows" class="employee-history-list"></div></div>
+        </section>
+
         <section id="audit" class="view manager-only">
           <div class="page-heading"><div><p class="eyebrow">Protected records</p><h2>Operational Audit Log</h2><p>Append-only events generated by secure database operations.</p></div><div class="page-chip">Manager access</div></div>
           <div class="card history-card">
@@ -332,7 +353,7 @@
           <div class="help-grid">
             <div class="card help-card">
               <p class="section-kicker">Employee Help</p><h3>Using your radio</h3>
-              <ol class="help-steps"><li><strong>Account access</strong><span>Verify your email, sign in, and wait for Manager approval when joining.</span></li><li><strong>Check out</strong><span>Choose an Available radio or scan its QR code, then confirm Check Out.</span></li><li><strong>Return</strong><span>Tap Scan QR to Return and scan the exact radio assigned to you. Camera access is required.</span></li><li><strong>Password</strong><span>Use Forgot password? on the sign-in page if you cannot remember your password.</span></li><li><strong>Camera</strong><span>Use Safari on iPhone/iPad or Chrome on Android and allow camera access when prompted.</span></li></ol>
+              <ol class="help-steps"><li><strong>Account access</strong><span>Verify your email, sign in, and wait for Manager approval when joining.</span></li><li><strong>Check out</strong><span>Select your scheduled shift, accept the equipment agreement on first use, then scan the secure QR code on the physical radio you are taking.</span></li><li><strong>Return</strong><span>Tap Scan QR to Return and scan the exact radio assigned to you. Camera access is required.</span></li><li><strong>Password</strong><span>Use Forgot password? on the sign-in page if you cannot remember your password.</span></li><li><strong>Camera</strong><span>Use Safari on iPhone/iPad or Chrome on Android and allow camera access when prompted.</span></li></ol>
             </div>
             <div class="card help-card manager-only">
               <p class="section-kicker">Manager Help</p><h3>Managing the operation</h3>
@@ -365,9 +386,33 @@
     </form>
   </dialog>
 
+
+  <dialog id="exceptionDialog" class="condition-dialog">
+    <form id="exceptionForm">
+      <div class="dialog-head"><div><p class="section-kicker light">Manager exception</p><h3 id="exceptionTitle">Resolve Radio Exception</h3></div><button id="closeExceptionDialog" class="icon-btn" type="button">×</button></div>
+      <div class="condition-body"><input id="exceptionAssignmentId" type="hidden"><label class="field"><span>Incident type</span><select id="exceptionType"><option value="LOST">Lost</option><option value="MISSING">Missing</option><option value="DAMAGED">Damaged</option><option value="STOLEN">Stolen</option><option value="MALFUNCTION">Malfunction</option><option value="OTHER">Other</option></select></label><label class="field"><span>Radio status after review</span><select id="exceptionRadioStatus"><option value="LOST">Lost</option><option value="DAMAGED">Damaged</option><option value="REPAIR">In Repair</option><option value="AVAILABLE">Available</option></select></label><label class="field"><span>Manager explanation</span><textarea id="exceptionExplanation" rows="4" required></textarea></label><label class="field"><span>Corrective action</span><select id="exceptionDiscipline"><option value="NONE">None</option><option value="WRITTEN_WARNING">Written Warning</option><option value="WRITE_UP">Write-Up / Corrective Action</option></select></label><label class="agreement-check"><input id="financialReviewRequired" type="checkbox"><span>Flag for Financial Review Required. This does not create a charge or deduction.</span></label><label class="field"><span>Manager notes for warning/write-up</span><textarea id="disciplineManagerNotes" rows="3"></textarea></label><div id="exceptionMessage" class="form-message"></div><button class="primary-btn" type="submit">Resolve &amp; Record</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="qrLabelDialog" class="legal-dialog qr-label-dialog">
+    <div class="dialog-head"><div><p class="section-kicker light">Secure radio label</p><h3 id="qrLabelTitle">WT-01</h3></div><button id="closeQrLabelDialog" class="icon-btn" type="button">×</button></div>
+    <div class="legal-content"><div id="qrPrintArea" class="qr-print-area"></div><p class="condition-note">The QR contains a random secure identifier. Do not post the token text separately.</p><button id="printQrLabelBtn" class="primary-btn" type="button">Print Label</button></div>
+  </dialog>
+
+  <dialog id="qrBulkDialog" class="legal-dialog qr-bulk-dialog">
+    <div class="dialog-head"><div><p class="section-kicker light">Secure label sheet</p><h3>WT-01–WT-40</h3></div><button id="closeQrBulkDialog" class="icon-btn" type="button">×</button></div>
+    <div class="legal-content"><div id="qrBulkPrintArea" class="qr-bulk-grid"></div><button id="printQrBulkBtn" class="primary-btn" type="button">Print All Labels</button></div>
+  </dialog>
+
   <dialog id="legalDialog" class="legal-dialog">
     <div class="dialog-head"><div><p class="section-kicker light">Valet Radio HQ</p><h3 id="legalDialogTitle">Privacy</h3></div><button id="closeLegalDialog" class="icon-btn" type="button">×</button></div>
     <div id="legalDialogContent" class="legal-content"></div>
+  </dialog>
+
+
+  <dialog id="equipmentAgreementDialog" class="legal-dialog agreement-dialog">
+    <div class="dialog-head"><div><p class="section-kicker light">First-time equipment acknowledgment</p><h3 id="equipmentAgreementTitle">Radio &amp; Equipment Use Agreement</h3></div></div>
+    <div class="legal-content"><div id="equipmentAgreementBody"></div><label class="agreement-check"><input id="agreementAcceptCheck" type="checkbox"><span>I have read and agree to the Radio &amp; Equipment Use Agreement.</span></label><button id="agreementAcceptBtn" class="primary-btn" type="button" disabled>Accept &amp; Continue</button><div id="agreementMessage" class="form-message" role="status"></div></div>
   </dialog>
 
   <dialog id="scannerDialog">
@@ -380,6 +425,7 @@
   <script src="/api/runtime-config"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" crossorigin="anonymous"></script>
   <script type="module" src="src/app.js"></script>
 </body>
 </html>

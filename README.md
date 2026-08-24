@@ -92,7 +92,7 @@ Employees never need Supabase or Vercel access.
 6. Wait on the **Account awaiting approval** screen.
 7. After a Manager approves the account, tap **Refresh Status** or sign in again.
 8. The employee sees only the simplified **My Radio** workspace.
-9. Select or scan a radio and tap **Check Out**.
+9. Select the scheduled shift and scan the secure QR code on the physical radio to check it out. First use also requires the one-time Radio & Equipment Use Agreement.
 10. At the end of the shift, tap **Return My Radio**.
 
 An employee with an open assignment cannot check out a second radio.
@@ -212,3 +212,24 @@ The sign-in screen includes **Resend verification email**. Enter the employee em
 ## Manager Operations Overview
 
 Managers land on a live operations overview that highlights currently checked-out radios, overdue/unreturned radios, Lost/Damaged/In Repair units, and the last known holder for each priority asset. Search and filters can narrow by radio, employee, status group, or department. Quick actions open the radio detail, employee record, Manager return, or condition-management workflow, while recent protected audit events appear in the same view. Overdue status is derived from the expected return time and does not rewrite the stored radio assignment just for display.
+
+## Secure accountability rollout (2026-08-24)
+
+This release adds secure per-radio QR bearer tokens, the one-time Radio & Equipment Use Agreement, employee-selected AM/PM/Overnight shifts, return-due accountability, Manager incident/discipline tools, and GSC Captain/Cashier operational read-only roles.
+
+### Required deployment order
+
+1. Keep the current production deployment available as your rollback point.
+2. In Supabase SQL Editor, run `supabase/migrations/202608240009_secure_accountability.sql`.
+3. Deploy this application package through GitHub/Vercel.
+4. Sign in as a Manager and open **Accountability**.
+5. Use **Generate / Rotate All 40 Labels** only when you are ready to immediately print and install the entire WT-01–WT-40 secure label set. Generating new tokens invalidates any previous QR labels.
+6. Print the generated label sheet and install each label on the matching physical radio. The visible radio number stays WT-01 through WT-40; the QR itself contains the random secure bearer token.
+7. Test one Valet Associate end-to-end: choose shift → accept the one-time agreement → scan checkout → scan the same radio to return.
+8. Test one GSC Captain and one Cashier account to verify they can view **Currently Checked Out** and **Radio History** but cannot perform Manager mutations.
+
+### Return reminders
+
+The app computes return status from server-side shift due times. While the web app/PWA is open, it refreshes the active assignment and can display an in-app reminder and browser notification (when notification permission has been granted) 15 minutes before shift end and at shift end. A fully background push notification when the app is closed would require a future push-subscription/server-delivery service and is not claimed by this release.
+
+`Tip Release Pending` is an operational management flag only. Valet Radio HQ does not connect to payroll/timeclock systems, automatically withhold tips, deduct wages, or determine financial liability.

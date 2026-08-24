@@ -57,7 +57,7 @@ export function buildProductionState({radios=[],assignments=[],profiles=[],profi
     employeeId:a.employee_id_snapshot,employeeName:a.employee_name_snapshot,
     department:a.department_snapshot,checkoutAt:a.checkout_at,
     expectedReturnAt:a.expected_return_at,returnAt:a.return_at,
-    issuedBy:a.issued_by,returnedBy:a.returned_by
+    issuedBy:a.issued_by,returnedBy:a.returned_by,shiftCode:a.shift_code||null,shiftDate:a.shift_date||null,shiftEndAt:a.shift_end_at||a.expected_return_at||null,returnStatus:a.return_status||null,tipReleaseStatus:a.tip_release_status||null
   }));
   return {radios:uiRadios,history:uiHistory};
 }
@@ -80,9 +80,11 @@ export function summarizeEmployees(rows=[],radios=[]){
 }
 export function getEmployeeWorkspace(state,profile){
   const activeRadio=state.radios.find(r=>r.assignedProfileId===profile?.id && ['IN_USE','OVERDUE','LOST'].includes(r.status)) || null;
+  const openAssignment=sortHistoryNewestFirst(state.history.filter(h=>h.profileId===profile?.id&&!h.returnAt))[0]||null;
   const availableRadios=state.radios.filter(r=>r.status==='AVAILABLE');
   return {
-    activeRadio,
+    activeRadio:activeRadio&&openAssignment?{...activeRadio,shiftCode:openAssignment.shiftCode,shiftDate:openAssignment.shiftDate,shiftEndAt:openAssignment.shiftEndAt,returnStatus:openAssignment.returnStatus,tipReleaseStatus:openAssignment.tipReleaseStatus}:activeRadio,
+    activeAssignment:openAssignment,
     availableRadios,
     availableCount:availableRadios.length,
     canCheckout:!activeRadio && availableRadios.length>0,
@@ -123,7 +125,7 @@ export function getManagerOperationsOverview(state,query='',filter='ALL',departm
     return (r.department||holder?.department||'')===department;
   };
   const all=radios.filter(r=>matchesGroup(r)&&matchesDepartment(r)&&(!q||opsSearchText(state,r).includes(q)));
-  const withHolder=r=>({...r,lastHolder:getLastKnownHolder(state,r.id)});
+  const withHolder=r=>{const active=(state?.history||[]).find(h=>h.radioId===r.id&&!h.returnAt);return {...r,lastHolder:getLastKnownHolder(state,r.id),shiftCode:active?.shiftCode||null,shiftEndAt:active?.shiftEndAt||r.expectedReturnAt||null,tipReleaseStatus:r.status==='OVERDUE'?(active?.tipReleaseStatus==='TIP_RELEASE_CLEARED'?'TIP_RELEASE_CLEARED':'TIP_RELEASE_PENDING'):(active?.tipReleaseStatus||null),returnStatus:r.status==='OVERDUE'?'UNRETURNED_AFTER_SHIFT':(active?.returnStatus||null)};};
   const checkedOut=all.filter(r=>['IN_USE','OVERDUE'].includes(r.status)).sort((a,b)=>{
     if(a.status!==b.status)return a.status==='OVERDUE'?-1:1;
     return new Date(a.checkoutAt||0)-new Date(b.checkoutAt||0);
