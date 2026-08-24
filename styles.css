@@ -30,3 +30,4 @@ dialog{border:0;border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,.35);paddin
   .auth-panel{margin:0 auto;min-height:min-content;padding:24px 20px;}
   .account-gate{display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 12px calc(28px + env(safe-area-inset-bottom));}
   .account-gate-card{margin:0 auto;min-height:min-content;padding:24px 20px;}
+}

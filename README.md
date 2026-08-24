@@ -145,3 +145,9 @@ After the employee/Valet migrations have been applied, run:
 `supabase/migrations/202608230004_manager_roles.sql`
 
 This adds Manager promotion/demotion controls. Employee ID `1001` is marked as the protected Primary Manager during this migration. Active approved Valet Associate accounts can be promoted to `MANAGER` and `Management`; non-primary managers can be demoted back to `EMPLOYEE` and `Valet Associate`. The Primary Manager and the last remaining active Manager cannot be demoted.
+
+## QR-verified employee returns
+
+Migration `202608230005_qr_verified_returns.sql` changes employee returns so they must use the QR-verified return RPC. The employee UI requests browser camera permission, prefers the rear camera, verifies that the scanned WT code matches the radio currently assigned to the signed-in employee, and records `QR_VERIFIED_RETURN` in the audit log. Managers retain a `RADIO_RETURN_OVERRIDE` path for damaged or unavailable QR labels.
+
+For camera access, deploy over HTTPS (Vercel does this automatically) and allow camera permission when the browser prompts. If permission was previously denied, re-enable Camera for the RadioOps site in the browser/site settings.

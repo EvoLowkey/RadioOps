@@ -100,7 +100,7 @@
                 <label class="field"><span>Select an available radio</span><select id="employeeRadioSelect"></select></label>
                 <div class="employee-action-row"><button id="employeeScanBtn" class="secondary-btn" type="button">Scan Radio QR</button><button id="employeeCheckoutBtn" class="primary-btn" type="button">Check Out</button></div>
               </div>
-              <button id="employeeReturnBtn" class="primary-btn employee-return-btn" type="button" hidden>Return My Radio</button>
+              <button id="employeeReturnBtn" class="primary-btn employee-return-btn" type="button" hidden>Scan QR to Return</button>
               <div id="employeeActionMessage" class="form-message" role="status" aria-live="polite"></div>
             </div>
             <aside class="card employee-history-card"><p class="section-kicker">My recent activity</p><h3>Last 5 assignments</h3><div id="employeeRecentHistory" class="employee-history-list"></div></aside>
@@ -260,7 +260,7 @@
   <dialog id="scannerDialog">
     <div class="dialog-head"><div><p class="section-kicker light">Asset scanner</p><h3>Scan Radio QR</h3></div><button id="closeScanner" class="icon-btn">×</button></div>
     <div class="scanner-frame"><video id="scannerVideo" playsinline muted></video><div class="scan-reticle"></div></div>
-    <p id="scannerStatus">Point the camera at a WT-01 through WT-40 QR code.</p>
+    <p id="scannerStatus">Allow camera access, then point the camera at the radio QR code.</p>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>

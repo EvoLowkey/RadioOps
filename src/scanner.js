@@ -6,3 +6,11 @@ export function parseRadioCode(value){
   return n>=1&&n<=40?`WT-${String(n).padStart(2,'0')}`:null;
 }
 export function canUseBarcodeDetector(){ return typeof BarcodeDetector!=='undefined'; }
+export function matchesAssignedRadio(scannedValue, assignedRadioId){
+  const scanned=parseRadioCode(scannedValue);
+  const assigned=parseRadioCode(assignedRadioId);
+  return Boolean(scanned&&assigned&&scanned===assigned);
+}
+export function getPreferredCameraConstraints(){
+  return {video:{facingMode:{ideal:'environment'}},audio:false};
+}
