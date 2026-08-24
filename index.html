@@ -86,6 +86,15 @@
         <div class="topbar-meta">
           <div class="time-block"><span>Local time</span><strong id="systemTime">—</strong></div>
           <div class="operator-pill"><span class="operator-avatar" id="identityAvatar">RO</span><div><strong id="identityName">Signed out</strong><span id="identityRole">—</span></div><button id="signOutBtn" class="signout-btn" type="button">Sign out</button></div>
+          <div class="mobile-profile-menu-wrap">
+            <button id="mobileProfileBtn" class="mobile-profile-btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="mobileProfileMenu" aria-label="Open account menu">
+              <span class="mobile-profile-avatar" aria-hidden="true">RO</span><span class="mobile-profile-caret" aria-hidden="true">⌄</span>
+            </button>
+            <div id="mobileProfileMenu" class="mobile-profile-menu" role="menu" hidden>
+              <div class="mobile-profile-identity"><strong id="mobileProfileName">Signed out</strong><span id="mobileProfileRole">—</span></div>
+              <button id="mobileSignOutBtn" class="mobile-signout-btn" type="button" role="menuitem">Sign Out</button>
+            </div>
+          </div>
         </div>
       </header>
 

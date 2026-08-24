@@ -49,10 +49,12 @@ function setAuthMode(next){
   $('#authCopy').textContent=signup?'Use any email address. Your account stays pending until a RadioOps Manager approves it.':'Use your workplace account to check radios in and out and keep the fleet synchronized across devices.';
   authMessage('','');
 }
+function closeMobileProfileMenu(){const menu=$('#mobileProfileMenu'),btn=$('#mobileProfileBtn');if(!menu||!btn)return;menu.hidden=true;btn.setAttribute('aria-expanded','false');}
+function toggleMobileProfileMenu(){const menu=$('#mobileProfileMenu'),btn=$('#mobileProfileBtn');if(!menu||!btn)return;const opening=menu.hidden;menu.hidden=!opening;btn.setAttribute('aria-expanded',opening?'true':'false');}
 function showSignedOut(){
   $('#authGate').hidden=false;$('#accountGate').hidden=true;$('.app-frame').hidden=false;$('.app-frame').classList.add('app-locked');
   document.body.classList.remove('manager-session','employee-session');
-  $('#identityName').textContent='Signed out';$('#identityRole').textContent='—';
+  $('#identityName').textContent='Signed out';$('#identityRole').textContent='—';$('#mobileProfileName').textContent='Signed out';$('#mobileProfileRole').textContent='—';closeMobileProfileMenu();
 }
 function showActiveApp(){
   $('#authGate').hidden=true;$('#accountGate').hidden=true;$('.app-frame').hidden=false;$('.app-frame').classList.remove('app-locked');
@@ -73,8 +75,9 @@ function applyRoleUI(){
   if(!profile)return;const manager=isManager(profile);
   $$('.manager-only').forEach(el=>el.hidden=!manager);$$('.employee-only').forEach(el=>el.hidden=manager);
   $('#employeeFields').hidden=!manager||mode!=='out';
-  $('#identityName').textContent=profile.display_name;$('#identityRole').textContent=`${manager?'Manager':'Employee'} • ${profile.department}`;
-  $('#identityAvatar').textContent=profile.display_name.split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();
+  const identityRole=`${manager?'Manager':'Employee'} • ${profile.department}`;const initials=profile.display_name.split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();
+  $('#identityName').textContent=profile.display_name;$('#identityRole').textContent=identityRole;$('#mobileProfileName').textContent=profile.display_name;$('#mobileProfileRole').textContent=identityRole;
+  $('#identityAvatar').textContent=initials;const mobileAvatar=document.querySelector('.mobile-profile-avatar');if(mobileAvatar)mobileAvatar.textContent=initials;
   if($('#employeeWorkspace'))$('#employeeWorkspace').hidden=true;
 }
 
@@ -147,7 +150,7 @@ async function bootstrap(){updateClock();setInterval(updateClock,30000);showSign
 $('#authSignInTab').addEventListener('click',()=>setAuthMode('signin'));$('#authSignUpTab').addEventListener('click',()=>setAuthMode('signup'));
 $('#signInForm').addEventListener('submit',async e=>{e.preventDefault();if(!api){authMessage('Supabase is not configured yet. See README.md.');return;}authMessage('Signing in…','success');try{const data=await api.signIn($('#signInEmail').value.trim(),$('#signInPassword').value);await establishSession(data.session||null);authMessage('','');}catch(err){authMessage(humanError(err));}});
 $('#signUpForm').addEventListener('submit',async e=>{e.preventDefault();if(!api){authMessage('Supabase is not configured yet.','error');return;}const displayName=$('#signUpName').value.trim(),employeeId=$('#signUpEmployeeId').value.trim(),email=$('#signUpEmail').value.trim(),password=$('#signUpPassword').value,confirmPassword=$('#signUpConfirmPassword').value;if(!displayName||!employeeId||!email||!password){authMessage('Complete every field.','error');return;}if(password!==confirmPassword){authMessage('Passwords do not match.','error');return;}authMessage('Creating your account…','success');try{const data=await api.signUpEmployee({email,password,displayName,employeeId});e.target.reset();if(data?.session){await establishSession(data.session);}else{setAuthMode('signin');authMessage('Account created. Check your email to verify it, then sign in. A Manager must approve your account before fleet access.','success');}}catch(err){authMessage(humanError(err));}});
-$('#signOutBtn').addEventListener('click',signOut);$('#accountGateSignOut').addEventListener('click',signOut);$('#refreshAccountStatus').addEventListener('click',refreshProfileStatus);
+$('#signOutBtn').addEventListener('click',signOut);$('#mobileSignOutBtn').addEventListener('click',signOut);$('#mobileProfileBtn').addEventListener('click',e=>{e.stopPropagation();toggleMobileProfileMenu();});$('#mobileProfileMenu').addEventListener('click',e=>e.stopPropagation());document.addEventListener('click',closeMobileProfileMenu);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMobileProfileMenu();});$('#accountGateSignOut').addEventListener('click',signOut);$('#refreshAccountStatus').addEventListener('click',refreshProfileStatus);
 $$('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));$$('.mode-btn').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));$$('[data-jump]').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.jump)));
 $('#quickCheckout').addEventListener('click',()=>{switchView('checkout');setMode('out');});$('#quickReturn').addEventListener('click',()=>{switchView('checkout');setMode('return');});
 $('#radioSearch').addEventListener('input',renderRadios);$('#statusFilter').addEventListener('change',renderRadios);$('#radioSelect').addEventListener('change',updateSelectedVisual);$('#employeeStatusFilter').addEventListener('change',renderEmployees);
