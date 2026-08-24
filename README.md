@@ -1,4 +1,4 @@
-# Valet Ops HQ — RadioOps Production
+# Valet Radio HQ — RadioOps Production
 
 RadioOps is a shared 40-radio tracking system for WT-01 through WT-40. The production app uses Supabase Auth + PostgreSQL for identity, approvals, shared fleet data, and database-enforced authorization, with Vercel hosting the frontend.
 
@@ -182,9 +182,9 @@ Set its value to the project's Supabase **service_role / secret server key**. Th
 
 After adding the variable, redeploy Vercel. The browser calls `/api/remove-employee` with the signed-in Manager's access token; the server verifies Manager status before using the secret key to remove the target Auth user.
 
-## Valet Ops HQ branding and password recovery
+## Valet Radio HQ branding and password recovery
 
-The public app brand is **Valet Ops HQ**. **RadioOps** remains the radio fleet module inside the platform.
+The public app brand is **Valet Radio HQ**. **RadioOps** remains the radio fleet module inside the platform.
 
 Password recovery uses Supabase Auth. Add this URL to **Supabase → Authentication → URL Configuration → Redirect URLs**:
 
@@ -194,7 +194,7 @@ The existing email-verification callback should remain:
 
 `https://www.valetopshq.com/auth/callback`
 
-The Reset Password email template can continue using Supabase's `{{ .ConfirmationURL }}` variable; RadioOps requests the recovery email with the Valet Ops HQ reset route as the redirect destination.
+The Reset Password email template can continue using Supabase's `{{ .ConfirmationURL }}` variable; RadioOps requests the recovery email with the Valet Radio HQ reset route as the redirect destination.
 
 
 ## Radio condition management

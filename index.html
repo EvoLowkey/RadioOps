@@ -4,23 +4,24 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0b1626" />
-  <meta name="application-name" content="Valet Ops HQ" />
+  <meta name="application-name" content="Valet Radio HQ" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Valet Ops HQ" />
+  <meta name="apple-mobile-web-app-title" content="Valet Radio HQ" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-  <title>Valet Ops HQ — Radio Fleet Management</title>
+  <link rel="icon" type="image/png" href="/branding/favicon-64.png" />
+  <title>Valet Radio HQ | Radio Management</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="connectionBanner" class="connection-banner" hidden></div>
-  <div id="offlineBanner" class="offline-banner" hidden>Valet Ops HQ is offline. Fleet actions are unavailable until your connection returns.</div>
+  <div id="offlineBanner" class="offline-banner" hidden>Valet Radio HQ is offline. Fleet actions are unavailable until your connection returns.</div>
   <section id="authGate" class="auth-gate">
     <div class="auth-panel">
-      <div id="verifiedLoginBanner" class="verified-login-banner" role="status" aria-live="polite" hidden><strong>✓ Email successfully verified</strong><span>Your email has been successfully verified. You can now log in to Valet Ops HQ.</span></div>
-      <div class="auth-brand"><div class="brand-mark">V</div><div><strong>Valet Ops HQ</strong><span>Valet Operations &amp; Equipment Management</span></div></div>
-      <p class="eyebrow">Secure employee access</p><h1 id="authTitle">Sign in to Valet Ops HQ</h1>
+      <div id="verifiedLoginBanner" class="verified-login-banner" role="status" aria-live="polite" hidden><strong>✓ Email successfully verified</strong><span>Your email has been successfully verified. You can now log in to Valet Radio HQ.</span></div>
+      <div class="auth-brand auth-brand-logo"><img class="brand-full-logo" src="/branding/valet-radio-hq-logo.png" alt="Valet Radio HQ"></div>
+      <p class="eyebrow">Secure employee access</p><h1 id="authTitle">Sign in to Valet Radio HQ</h1>
       <p class="auth-copy" id="authCopy">Use your workplace account to check radios in and out and keep the fleet synchronized across devices.</p>
       <div class="auth-tabs" role="tablist" aria-label="Authentication options">
         <button id="authSignInTab" class="auth-tab active" type="button">Sign In</button>
@@ -46,7 +47,7 @@
           <label class="field"><span>Password</span><input id="signUpPassword" type="password" autocomplete="new-password" required placeholder="Create password"></label>
           <label class="field"><span>Confirm password</span><input id="signUpConfirmPassword" type="password" autocomplete="new-password" required placeholder="Repeat password"></label>
         </div>
-        <div class="signup-notice"><strong>Manager approval required</strong><span>Creating an account does not grant fleet access. A Valet Ops HQ Manager must approve your request.</span></div>
+        <div class="signup-notice"><strong>Manager approval required</strong><span>Creating an account does not grant fleet access. A Valet Radio HQ Manager must approve your request.</span></div>
         <button class="primary-btn submit-btn" type="submit">Create employee account</button>
       </form>
       <div id="authMessage" class="form-message" role="status" aria-live="polite"></div>
@@ -55,7 +56,7 @@
   </section>
   <section id="accountGate" class="account-gate" hidden>
     <div class="account-gate-card">
-      <div class="auth-brand"><div class="brand-mark">V</div><div><strong>Valet Ops HQ</strong><span>Employee Access</span></div></div>
+      <div class="auth-brand"><img class="brand-compact-mark" src="/branding/valet-radio-hq-mark.png" alt=""><div><strong>Valet Radio HQ</strong><span>Employee Access</span></div></div>
       <div id="accountGateIcon" class="account-state-icon">◷</div>
       <p class="eyebrow" id="accountGateEyebrow">Account status</p>
       <h1 id="accountGateTitle">Account awaiting approval</h1>
@@ -67,10 +68,10 @@
   <div class="app-frame">
     <aside class="sidebar">
       <div class="brand-block">
-        <div class="brand-mark">V</div>
+        <img class="sidebar-brand-mark" src="/branding/valet-radio-hq-mark.png" alt="">
         <div>
-          <strong>Valet Ops HQ</strong>
-          <span>RadioOps • Fleet Control</span>
+          <strong>Valet Radio HQ</strong>
+          <span>Radio Management • Fleet Control</span>
         </div>
       </div>
 
@@ -96,7 +97,7 @@
       <header class="topbar">
         <div>
           <p class="eyebrow">Operations Center</p>
-          <h1>Walkie-Talkie Tracking</h1>
+          <h1>Radio Management</h1>
         </div>
         <div class="topbar-meta">
           <button id="installAppBtn" class="install-app-btn" type="button" hidden>Install App</button>
@@ -113,7 +114,7 @@
           </div>
         </div>
       </header>
-      <div id="iosInstallGuide" class="ios-install-guide" hidden><strong>Add Valet Ops HQ to your Home Screen</strong><span>In Safari, tap Share, then choose <b>Add to Home Screen</b>.</span><button id="dismissIosInstall" type="button" aria-label="Dismiss install guide">×</button></div>
+      <div id="iosInstallGuide" class="ios-install-guide" hidden><strong>Add Valet Radio HQ to your Home Screen</strong><span>In Safari, tap Share, then choose <b>Add to Home Screen</b>.</span><button id="dismissIosInstall" type="button" aria-label="Dismiss install guide">×</button></div>
 
       <main class="app-shell">
         <section id="employeeHome" class="view employee-only">
@@ -327,7 +328,7 @@
         </section>
 
         <section id="help" class="view">
-          <div class="page-heading"><div><p class="eyebrow">Guides &amp; support</p><h2>Help &amp; Support</h2><p>Quick answers for daily Valet Ops HQ use.</p></div><div class="page-chip">Workplace guide</div></div>
+          <div class="page-heading"><div><p class="eyebrow">Guides &amp; support</p><h2>Help &amp; Support</h2><p>Quick answers for daily Valet Radio HQ radio operations.</p></div><div class="page-chip">Workplace guide</div></div>
           <div class="help-grid">
             <div class="card help-card">
               <p class="section-kicker">Employee Help</p><h3>Using your radio</h3>
@@ -339,7 +340,7 @@
             </div>
             <div class="card help-card">
               <p class="section-kicker">Support</p><h3>Need assistance?</h3><p class="help-copy">Contact your manager for assistance. Do not share passwords, verification codes, or QR-return credentials with anyone.</p>
-              <div class="support-notice"><strong>Valet Ops HQ</strong><span>Valet Operations &amp; Equipment Management</span><span>www.valetopshq.com</span></div>
+              <div class="support-notice"><strong>Valet Radio HQ</strong><span>Professional Valet Radio Management</span><span>www.valetopshq.com</span></div>
             </div>
             <div class="card help-card manager-only">
               <p class="section-kicker">Production checks</p><h3>Manager checklist</h3><ul class="help-checks"><li>Review Supabase backups and recovery settings.</li><li>Monitor Supabase, Vercel, and Resend usage limits.</li><li>Keep Manager access limited to authorized leaders.</li><li>Review Lost/Damaged radios and open assignments regularly.</li><li>Test employee signup and password recovery after major deployments.</li></ul>
@@ -347,7 +348,7 @@
           </div>
         </section>
       </main>
-      <footer class="app-footer"><span>© Valet Ops HQ • Valet Operations &amp; Equipment Management</span><div><button type="button" data-jump="help">Help</button><button type="button" data-legal="privacy">Privacy</button><button type="button" data-legal="terms">Terms</button></div></footer>
+      <footer class="app-footer"><span>© Valet Radio HQ • Professional Valet Radio Management</span><div><button type="button" data-jump="help">Help</button><button type="button" data-legal="privacy">Privacy</button><button type="button" data-legal="terms">Terms</button></div></footer>
     </div>
   </div>
 
@@ -365,7 +366,7 @@
   </dialog>
 
   <dialog id="legalDialog" class="legal-dialog">
-    <div class="dialog-head"><div><p class="section-kicker light">Valet Ops HQ</p><h3 id="legalDialogTitle">Privacy</h3></div><button id="closeLegalDialog" class="icon-btn" type="button">×</button></div>
+    <div class="dialog-head"><div><p class="section-kicker light">Valet Radio HQ</p><h3 id="legalDialogTitle">Privacy</h3></div><button id="closeLegalDialog" class="icon-btn" type="button">×</button></div>
     <div id="legalDialogContent" class="legal-content"></div>
   </dialog>
 

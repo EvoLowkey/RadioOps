@@ -4,7 +4,7 @@ import fs from 'node:fs';
 const root=new URL('../',import.meta.url);
 const read=p=>fs.readFileSync(new URL(p,root),'utf8');
 
-test('signup redirects verification to Valet Ops HQ callback',()=>{
+test('signup redirects verification to Valet Radio HQ callback',()=>{
   const api=read('src/api.js');
   assert.match(api,/emailRedirectTo/);
   assert.match(api,/\/auth\/callback/);
@@ -26,7 +26,7 @@ test('successful verification shows a clear top login-ready message',()=>{
   const indexHtml=read('index.html');
   const app=read('src/app.js');
   assert.match(callbackHtml,/id=["']verificationSuccessBanner["']/);
-  assert.match(callbackHtml,/Your email has been successfully verified\. You can now log in to Valet Ops HQ\./);
+  assert.match(callbackHtml,/Your email has been successfully verified\. You can now log in to Valet Radio HQ\./);
   assert.match(callbackHtml,/href=["']\/\?verified=1["'][^>]*>Log In</);
   assert.match(indexHtml,/id=["']verifiedLoginBanner["']/);
   assert.match(app,/URLSearchParams/);

@@ -13,7 +13,7 @@ test('api requests a branded password recovery redirect',()=>{
 test('password reset page accepts a new password and updates the signed-in recovery session',()=>{
   const html=read('auth/reset-password.html');
   const js=read('src/reset-password.js');
-  assert.match(html,/Reset your Valet Ops HQ password/i);
+  assert.match(html,/Reset your Valet Radio HQ password/i);
   assert.match(html,/id=["']newPassword["']/);
   assert.match(html,/id=["']confirmNewPassword["']/);
   assert.match(js,/exchangeCodeForSession|getSession/);

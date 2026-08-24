@@ -1,4 +1,4 @@
-# Valet Ops HQ Production Checklist
+# Valet Radio HQ Production Checklist
 
 - Confirm Supabase backups and recovery settings are appropriate for the workplace.
 - Monitor Supabase database/auth usage, Vercel usage, and Resend email limits.

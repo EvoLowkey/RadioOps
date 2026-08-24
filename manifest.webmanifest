@@ -1,7 +1,7 @@
 {
-  "name": "Valet Ops HQ",
-  "short_name": "Valet Ops HQ",
-  "description": "Valet operations and equipment management, including secure RadioOps fleet checkout, QR-verified returns, charging, and employee access.",
+  "name": "Valet Radio HQ",
+  "short_name": "Valet Radio HQ",
+  "description": "Valet operations and equipment management, including secure radio fleet checkout, QR-verified returns, charging, and employee access.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
