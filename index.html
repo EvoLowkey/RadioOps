@@ -12,15 +12,42 @@
   <section id="authGate" class="auth-gate">
     <div class="auth-panel">
       <div class="auth-brand"><div class="brand-mark">R</div><div><strong>RadioOps</strong><span>Secure Fleet Control</span></div></div>
-      <p class="eyebrow">Production access</p><h1>Sign in to RadioOps</h1>
-      <p class="auth-copy">Use your workplace account to check radios in and out and keep the fleet synchronized across devices.</p>
+      <p class="eyebrow">Production access</p><h1 id="authTitle">Sign in to RadioOps</h1>
+      <p class="auth-copy" id="authCopy">Use your workplace account to check radios in and out and keep the fleet synchronized across devices.</p>
+      <div class="auth-tabs" role="tablist" aria-label="Authentication options">
+        <button id="authSignInTab" class="auth-tab active" type="button">Sign In</button>
+        <button id="authSignUpTab" class="auth-tab" type="button">Create Employee Account</button>
+      </div>
       <form id="signInForm" class="auth-form">
-        <label class="field"><span>Email</span><input id="signInEmail" type="email" autocomplete="username" required placeholder="name@company.com"></label>
+        <label class="field"><span>Email</span><input id="signInEmail" type="email" autocomplete="username" required placeholder="name@example.com"></label>
         <label class="field"><span>Password</span><input id="signInPassword" type="password" autocomplete="current-password" required placeholder="Password"></label>
         <button class="primary-btn submit-btn" type="submit">Sign in securely</button>
-        <div id="authMessage" class="form-message" role="status" aria-live="polite"></div>
       </form>
+      <form id="signUpForm" class="auth-form signup-form" hidden>
+        <div class="signup-grid">
+          <label class="field signup-wide"><span>Full name</span><input id="signUpName" type="text" autocomplete="name" required placeholder="Alex Morgan"></label>
+          <label class="field"><span>Employee ID</span><input id="signUpEmployeeId" type="text" required placeholder="2042"></label>
+          <label class="field"><span>Department</span><input id="signUpDepartment" type="text" required placeholder="Security"></label>
+          <label class="field signup-wide"><span>Email</span><input id="signUpEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+          <label class="field"><span>Password</span><input id="signUpPassword" type="password" autocomplete="new-password" required placeholder="Create password"></label>
+          <label class="field"><span>Confirm password</span><input id="signUpConfirmPassword" type="password" autocomplete="new-password" required placeholder="Repeat password"></label>
+        </div>
+        <div class="signup-notice"><strong>Manager approval required</strong><span>Creating an account does not grant fleet access. A RadioOps Manager must approve your request.</span></div>
+        <button class="primary-btn submit-btn" type="submit">Create employee account</button>
+      </form>
+      <div id="authMessage" class="form-message" role="status" aria-live="polite"></div>
       <div id="setupMessage" class="setup-message" hidden><strong>Supabase setup required</strong><p>Configure the public Supabase URL and anon key before signing in. See README.md.</p></div>
+    </div>
+  </section>
+  <section id="accountGate" class="account-gate" hidden>
+    <div class="account-gate-card">
+      <div class="auth-brand"><div class="brand-mark">R</div><div><strong>RadioOps</strong><span>Employee Access</span></div></div>
+      <div id="accountGateIcon" class="account-state-icon">◷</div>
+      <p class="eyebrow" id="accountGateEyebrow">Account status</p>
+      <h1 id="accountGateTitle">Account awaiting approval</h1>
+      <p id="accountGateMessage">A Manager must approve your account before you can use the radio fleet.</p>
+      <div id="accountGateDetails" class="account-details"></div>
+      <div class="account-gate-actions"><button id="refreshAccountStatus" class="primary-btn" type="button">Refresh Status</button><button id="accountGateSignOut" class="secondary-btn" type="button">Sign Out</button></div>
     </div>
   </section>
   <div class="app-frame">
@@ -38,6 +65,8 @@
         <button class="nav-btn" data-view="checkout"><span class="nav-icon">⇄</span><span>Check Out / Return</span></button>
         <button class="nav-btn" data-view="history"><span class="nav-icon">◷</span><span>History</span></button>
         <button class="nav-btn" data-view="dock"><span class="nav-icon">⌁</span><span>Charging Dock</span></button>
+        <button class="nav-btn employee-only" data-view="employeeHome"><span class="nav-icon">⌁</span><span>My Radio</span></button>
+        <button class="nav-btn manager-only" data-view="employees"><span class="nav-icon">♙</span><span>Employees</span></button>
         <button class="nav-btn manager-only" data-view="audit"><span class="nav-icon">◎</span><span>Audit Log</span></button>
       </nav>
 
@@ -61,7 +90,24 @@
       </header>
 
       <main class="app-shell">
-        <section id="dashboard" class="view active-view">
+        <section id="employeeHome" class="view employee-only">
+          <div class="employee-portal-head"><div><p class="eyebrow">Employee workspace</p><h2>My Radio</h2><p>Check out what you need, return it when your shift is done.</p></div><div class="page-chip">Simple self-service</div></div>
+          <div class="employee-portal-grid">
+            <div class="employee-radio-main card">
+              <div class="employee-radio-status" id="employeeMyRadio"></div>
+              <div class="employee-count-card"><span>Radios available now</span><strong id="employeeAvailableCount">—</strong></div>
+              <div id="employeeCheckoutArea" class="employee-checkout-area">
+                <label class="field"><span>Select an available radio</span><select id="employeeRadioSelect"></select></label>
+                <div class="employee-action-row"><button id="employeeScanBtn" class="secondary-btn" type="button">Scan Radio QR</button><button id="employeeCheckoutBtn" class="primary-btn" type="button">Check Out</button></div>
+              </div>
+              <button id="employeeReturnBtn" class="primary-btn employee-return-btn" type="button" hidden>Return My Radio</button>
+              <div id="employeeActionMessage" class="form-message" role="status" aria-live="polite"></div>
+            </div>
+            <aside class="card employee-history-card"><p class="section-kicker">My recent activity</p><h3>Last 5 assignments</h3><div id="employeeRecentHistory" class="employee-history-list"></div></aside>
+          </div>
+        </section>
+
+        <section id="dashboard" class="view active-view manager-view">
           <div id="employeeWorkspace" class="employee-workspace" hidden></div>
           <div class="hero-panel">
             <div>
@@ -185,7 +231,16 @@
           <div class="safety-card"><span>!</span><div><strong>Charging hardware note</strong><p>This website tracks charging status only. Use manufacturer-compatible USB-C charging equipment and verify the POC-1 Lite charging requirements before building a multi-radio power dock.</p></div></div>
         </section>
 
-        <section id="audit" class="view">
+        <section id="employees" class="view manager-only">
+          <div class="page-heading"><div><p class="eyebrow">People & access</p><h2>Employees</h2><p>Review account requests and manage employee access without opening Supabase.</p></div><div class="page-chip">Manager control</div></div>
+          <div id="employeeSummary" class="employee-summary-grid"></div>
+          <div class="card employees-card">
+            <div class="card-header responsive-row"><div><p class="section-kicker">Employee directory</p><h3>Account Management</h3><p>New accounts remain pending until you approve them.</p></div><select id="employeeStatusFilter" aria-label="Filter employees by account status"><option value="PENDING">Pending</option><option value="ACTIVE">Active</option><option value="DISABLED">Disabled</option><option value="REJECTED">Rejected</option><option value="ALL">All employees</option></select></div>
+            <div class="table-wrap"><table><thead><tr><th>Employee</th><th>ID</th><th>Department</th><th>Email</th><th>Status</th><th>Current Radio</th><th>Joined</th><th></th></tr></thead><tbody id="employeeRows"></tbody></table></div>
+          </div>
+        </section>
+
+        <section id="audit" class="view manager-only">
           <div class="page-heading"><div><p class="eyebrow">Protected records</p><h2>Operational Audit Log</h2><p>Append-only events generated by secure database operations.</p></div><div class="page-chip">Manager access</div></div>
           <div class="card history-card">
             <div class="card-header"><div><p class="section-kicker">Accountability</p><h3>System Events</h3><p>Checkout, return, repair and dock changes are recorded here.</p></div></div>

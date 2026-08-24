@@ -1,122 +1,137 @@
-# RadioOps Production
+# RadioOps Production — Employee Signup & Approval Edition
 
-RadioOps is a secure shared radio-fleet tracking application for WT-01 through WT-40. The production edition uses Supabase Auth + PostgreSQL for shared data and database-enforced authorization, with a Vercel-ready static frontend.
+RadioOps is a shared 40-radio tracking system for WT-01 through WT-40. The production app uses Supabase Auth + PostgreSQL for identity, approvals, shared fleet data, and database-enforced authorization, with Vercel hosting the frontend.
 
-## Included
+## What this edition adds
 
-- Email/password sign-in through Supabase Auth
-- Employee and Manager roles
-- Shared 40-radio fleet state across devices
-- Atomic checkout and return RPCs
-- Employee self-checkout/self-return rules
-- Manager checkout/return on behalf of employees
-- Assignment history
-- Repair state management
-- Two 20-slot charging-bank status views
-- Append-only audit events
-- Realtime fleet refresh
-- QR scanning with manual selection fallback
-- Vercel runtime configuration endpoint
+- **Create Employee Account** directly from the RadioOps login page
+- Any email address may register
+- New accounts are forced to `EMPLOYEE` + `PENDING`
+- Manager approval is required before fleet access
+- Manager-only **Employees** page with Pending, Active, Disabled, and Rejected accounts
+- Approve, reject, disable, and restore controls through protected database RPCs
+- Simplified employee screen: **My Radio → Scan/Select → Check Out → Return**
+- Pending, rejected, and disabled users are blocked by PostgreSQL RLS/RPC checks, not only by UI hiding
+- Existing active production users, including the current Manager, are preserved
 
-## 1. Create the Supabase backend
+## Updating your existing live RadioOps site
 
-Create a Supabase project, then open **SQL Editor** and run:
+Your current site already has the original production migration installed. **Do not run the first migration again.**
+
+### Step 1 — Run the new Supabase migration
+
+In **Supabase → SQL Editor → New query**, copy and run:
+
+`supabase/migrations/202608230002_employee_signup_approval.sql`
+
+This migration:
+
+1. Adds approval/account-state fields to `profiles`.
+2. Marks your existing active accounts as `ACTIVE` so your Manager login keeps working.
+3. Adds a secure signup trigger for new Auth users.
+4. Adds Manager-only approval/disable RPCs.
+5. Updates RLS and checkout/return security to require `approval_status = 'ACTIVE'`.
+6. Adds `profiles` to Supabase Realtime when available.
+
+After it reports **Success**, do not manually create profile rows for new employees anymore. The signup trigger creates them automatically.
+
+### Step 2 — Check Supabase email confirmation
+
+Go to **Supabase → Authentication → Providers → Email** (the exact menu label may vary slightly).
+
+Recommended workplace setting: keep **Confirm email** enabled. The employee flow then becomes:
+
+`Create account → Verify email → Sign in → Pending Manager Approval → Manager Approves → Employee Access`
+
+If email confirmation is disabled, signup can create a signed-in session immediately, but the employee is still safely held at the Pending approval screen.
+
+### Step 3 — Upload the updated project to GitHub
+
+Replace/update these project files in your existing `RadioOps` repository:
+
+- `index.html`
+- `styles.css`
+- `src/app.js`
+- `src/api.js`
+- `src/permissions.js`
+- `src/view-models.js`
+- `supabase/migrations/202608230002_employee_signup_approval.sql`
+- updated tests and this README
+
+Keep your existing Vercel environment variables:
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+
+The production page loads runtime configuration from `/api/runtime-config`. **Never place a Supabase service-role/secret key in the browser or Vercel public source.**
+
+### Step 4 — Let Vercel redeploy
+
+Because Vercel is connected to GitHub, committing these files to `main` should automatically create a new deployment. Wait for **Ready**, then open your existing site.
+
+## Manager workflow
+
+After signing in as Manager, use **Employees** in the left navigation.
+
+- **Pending**: Approve or Reject new account requests.
+- **Active**: See the employee, current radio, recent state, and disable access when needed.
+- **Disabled**: Restore an employee's access.
+- **Rejected**: Explicitly restore access if a rejected employee should later be allowed in.
+
+RadioOps will refuse to disable an employee who still has a radio checked out. Return the radio first.
+
+## Employee workflow
+
+Employees never need Supabase or Vercel access.
+
+1. Open your normal RadioOps URL.
+2. Tap **Create Employee Account**.
+3. Enter full name, Employee ID, department, email, and password.
+4. Verify email if Supabase asks.
+5. Sign in.
+6. Wait on the **Account awaiting approval** screen.
+7. After a Manager approves the account, tap **Refresh Status** or sign in again.
+8. The employee sees only the simplified **My Radio** workspace.
+9. Select or scan a radio and tap **Check Out**.
+10. At the end of the shift, tap **Return My Radio**.
+
+An employee with an open assignment cannot check out a second radio.
+
+## Existing production foundation
+
+The original migration remains:
 
 `supabase/migrations/202608230001_radioops_production.sql`
 
-The migration creates the production schema, RLS policies, RPC functions and exactly 40 radios (WT-01 through WT-40).
-
-## 2. Create the first manager
-
-In Supabase **Authentication > Users**, create a user with email/password. Copy the user's UUID and run:
-
-```sql
-insert into public.profiles (id, employee_id, display_name, department, role)
-values ('AUTH-USER-UUID', '1001', 'Operations Manager', 'Management', 'MANAGER');
-```
-
-Create each employee in Supabase Auth, then add a matching profile:
-
-```sql
-insert into public.profiles (id, employee_id, display_name, department, role)
-values ('AUTH-USER-UUID', '2042', 'Alex Morgan', 'Security', 'EMPLOYEE');
-```
-
-No employee passwords are stored in RadioOps tables.
-
-## 3. Enable Realtime
-
-In the Supabase dashboard, enable Realtime replication for:
-
-- `public.radios`
-- `public.assignments`
-
-Realtime only triggers UI refreshes. Database responses remain the source of truth.
-
-## 4. Run locally
-
-Copy the values from `config.example.js` into `runtime-config.js` using your Supabase **Project URL** and **anon/publishable key**. Do not use the service-role key.
-
-Then run a static server from the project directory:
-
-```bash
-python -m http.server 8080
-```
-
-Open `http://localhost:8080`.
-
-Camera QR scanning generally requires HTTPS or localhost. Manual radio selection works without camera access.
-
-## 5. Deploy to Vercel
-
-Import this folder into Vercel and add these environment variables:
-
-- `SUPABASE_URL` = your public Supabase Project URL
-- `SUPABASE_ANON_KEY` = your public anon/publishable key
-
-`vercel.json` rewrites `/runtime-config.js` to the serverless endpoint in `api/runtime-config.js`, which exposes only those public client values to the browser.
-
-After deploying, add the production URL to the allowed redirect/site URLs in Supabase Authentication settings if required by your Auth configuration.
-
-## 6. Production verification checklist
-
-Before workplace use:
-
-1. Sign in as a Manager and confirm all 40 radios load.
-2. Sign in as an Employee on another device.
-3. Check out a radio as the Employee and confirm the Manager screen updates.
-4. Confirm the Employee cannot check a radio out to another employee.
-5. Confirm the Employee cannot return another employee's radio.
-6. Confirm a Manager can return a radio on behalf of an employee.
-7. Put an available radio into Repair and restore it.
-8. Change a charging-dock state as Manager.
-9. Confirm Employee accounts cannot see the manager Audit Log.
-10. Confirm audit events appear for checkout, return, repair and dock changes.
-11. Confirm direct client table writes are denied by RLS.
-12. Confirm no service-role key exists anywhere in browser source or Vercel public variables.
+It created the fleet schema, exactly 40 radios, assignments, audit events, charging states, and the original operational RPCs. A brand-new Supabase project must run `001` first and then `002`.
 
 ## Security model
 
-Authorization is enforced in PostgreSQL, not just by hiding buttons. Employees may select their own profile and assignments and read radio fleet state. Managers can read fleet-wide profiles/assignments/audit events. Normal authenticated clients cannot directly insert/update/delete radios, assignments or audit rows; all operational mutations use SECURITY DEFINER RPC functions that validate the caller.
+- Signup metadata can provide only display name, employee ID, and department.
+- The database trigger forces `role='EMPLOYEE'`, `approval_status='PENDING'`, and `is_active=false`.
+- Employees cannot approve themselves or change their role/status.
+- Only an active approved Manager can call employee-state administration RPCs.
+- Pending/rejected/disabled users can read only their own profile status.
+- Only active approved users can read radios/use checkout and return RPCs.
+- Only Managers can read all employee profiles and audit events or manage repair/dock state.
+- No service-role key is required or exposed.
 
 ## QR labels
 
-Each radio QR code should contain only its asset ID:
+Each radio QR code should contain only its permanent asset ID:
 
 `WT-01` ... `WT-40`
 
-Scanning a QR code identifies the radio but does not authorize the operation; the authenticated user and database policy do that.
+The QR identifies the physical radio. Authentication and database authorization determine whether the checkout/return is allowed.
 
 ## Charging hardware note
 
-RadioOps tracks charging status only. It does not control USB-C power. Verify the POC-1 Lite manufacturer's charging voltage/current and USB-C requirements before building a multi-radio charging dock.
+RadioOps tracks charging state only. It does not control USB-C power. Verify the POC-1 Lite manufacturer's charging requirements before building a multi-radio power dock.
 
 ## Tests
-
-Run:
 
 ```bash
 npm test
 ```
 
-The test suite covers the original fleet state logic plus production configuration, role behavior, backend API contracts and production UI structure.
+The suite covers fleet behavior, API RPC contracts, approval migration safeguards, role/account gates, signup metadata, Manager employee administration surfaces, and the simplified employee workspace.

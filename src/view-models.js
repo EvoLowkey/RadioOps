@@ -58,3 +58,31 @@ export function buildProductionState({radios=[],assignments=[],profiles=[],profi
   }));
   return {radios:uiRadios,history:uiHistory};
 }
+
+export function filterEmployeesByStatus(rows,status='ALL'){
+  return rows.filter(p=>status==='ALL' || (p.approval_status || (p.is_active?'ACTIVE':'DISABLED'))===status);
+}
+export function summarizeEmployees(rows=[],radios=[]){
+  const counts={pending:0,active:0,disabled:0,rejected:0,holding:0};
+  for(const p of rows){
+    const s=p.approval_status || (p.is_active?'ACTIVE':'DISABLED');
+    if(s==='PENDING')counts.pending++;
+    else if(s==='ACTIVE')counts.active++;
+    else if(s==='DISABLED')counts.disabled++;
+    else if(s==='REJECTED')counts.rejected++;
+  }
+  const holders=new Set(radios.filter(r=>r.assignedProfileId).map(r=>r.assignedProfileId));
+  counts.holding=holders.size;
+  return counts;
+}
+export function getEmployeeWorkspace(state,profile){
+  const activeRadio=state.radios.find(r=>r.assignedProfileId===profile?.id && ['IN_USE','OVERDUE'].includes(r.status)) || null;
+  const availableRadios=state.radios.filter(r=>r.status==='AVAILABLE');
+  return {
+    activeRadio,
+    availableRadios,
+    availableCount:availableRadios.length,
+    canCheckout:!activeRadio && availableRadios.length>0,
+    recentHistory:sortHistoryNewestFirst(state.history.filter(h=>h.profileId===profile?.id)).slice(0,5)
+  };
+}
