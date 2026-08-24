@@ -7,6 +7,7 @@ import {
   getFleetHealth, getDockCounts, getRadioDetail, buildProductionState,
   summarizeEmployees, filterEmployeesByStatus, getEmployeeWorkspace
 } from './view-models.js';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
@@ -183,5 +184,8 @@ function setupPwa(){
   window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;if(installBtn)installBtn.hidden=true;if(iosGuide)iosGuide.hidden=true;});
 }
 setupPwa();
+
+// Initialize Vercel Speed Insights
+injectSpeedInsights();
 
 bootstrap();
