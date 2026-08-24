@@ -151,3 +151,17 @@ This adds Manager promotion/demotion controls. Employee ID `1001` is marked as t
 Migration `202608230005_qr_verified_returns.sql` changes employee returns so they must use the QR-verified return RPC. The employee UI requests browser camera permission, prefers the rear camera, verifies that the scanned WT code matches the radio currently assigned to the signed-in employee, and records `QR_VERIFIED_RETURN` in the audit log. Managers retain a `RADIO_RETURN_OVERRIDE` path for damaged or unavailable QR labels.
 
 For camera access, deploy over HTTPS (Vercel does this automatically) and allow camera permission when the browser prompts. If permission was previously denied, re-enable Camera for the RadioOps site in the browser/site settings.
+
+
+## PWA / app installation
+RadioOps now ships with `manifest.webmanifest`, app icons, and a static-shell-only service worker. Android Chrome can offer **Install App** when browser criteria are met. On iPhone/iPad Safari, use **Share → Add to Home Screen**. Fleet mutations remain online-only and Supabase/API responses are not cached.
+
+## Supabase email verification redirect
+In **Supabase → Authentication → URL Configuration** set:
+
+- Site URL: `https://radio-ops.vercel.app`
+- Redirect URL: `https://radio-ops.vercel.app/auth/callback`
+
+Employee signup explicitly requests `/auth/callback` as the verification redirect. Vercel routes that path to the branded callback page, which shows **Email verified successfully** or a friendly expired/invalid-link state instead of a platform 404. Email verification does not approve the employee; the existing Manager approval step still applies.
+
+If you later connect a custom domain, add that domain's `/auth/callback` URL to Supabase and use the production domain as the Site URL.

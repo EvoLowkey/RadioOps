@@ -27,3 +27,8 @@ test('mobile menu is wired to identity and sign out behavior',()=>{
   assert.match(app,/mobileSignOutBtn/);
   assert.match(app,/addEventListener\(['"]click['"],signOut\)/);
 });
+
+test('mobile account control stays visible on very narrow phones',()=>{
+  assert.match(css,/@media\(max-width:460px\)[\s\S]*\.topbar-meta\{[^}]*display:flex[^}]*\}/s);
+  assert.match(css,/\.mobile-profile-menu\{[^}]*z-index:(?:[6-9]\d|[1-9]\d{2,})[^}]*\}/s);
+});
