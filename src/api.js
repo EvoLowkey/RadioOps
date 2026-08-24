@@ -12,6 +12,8 @@ function unwrap(result, fallback){ if(result?.error) throw normalizeError(result
 
 export function createRadioOpsApi(client){
   if(!client) throw new Error('Supabase client is required');
+  let activeFleetChannel=null;
+  let fleetChannelSerial=0;
   return {
     async signIn(email,password){ return unwrap(await client.auth.signInWithPassword({email,password}),'Sign in failed'); },
     async signUpEmployee({email,password,displayName,employeeId,department}){
@@ -34,12 +36,18 @@ export function createRadioOpsApi(client){
     async disableEmployee(profileId){ return unwrap(await client.rpc('disable_employee',{p_profile_id:profileId}),'Employee disable failed'); },
     async enableEmployee(profileId){ return unwrap(await client.rpc('enable_employee',{p_profile_id:profileId}),'Employee enable failed'); },
     subscribeFleet(onChange){
-      const channel=client.channel('radioops-fleet')
+      if(activeFleetChannel) client.removeChannel(activeFleetChannel);
+      const channel=client.channel(`radioops-fleet-${++fleetChannelSerial}`)
         .on('postgres_changes',{event:'*',schema:'public',table:'radios'},onChange)
         .on('postgres_changes',{event:'*',schema:'public',table:'assignments'},onChange)
         .on('postgres_changes',{event:'*',schema:'public',table:'profiles'},onChange)
         .subscribe();
-      return ()=>client.removeChannel(channel);
+      activeFleetChannel=channel;
+      return ()=>{
+        if(activeFleetChannel!==channel) return;
+        activeFleetChannel=null;
+        client.removeChannel(channel);
+      };
     }
   };
 }

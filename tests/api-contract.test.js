@@ -26,3 +26,25 @@ test('api sends returns and management changes through rpc functions', async()=>
   assert.equal(client.calls.filter(c=>c[0]==='rpc')[1][1],'set_radio_repair');
   assert.equal(client.calls.filter(c=>c[0]==='rpc')[2][1],'set_dock_state');
 });
+
+test('fleet subscriptions replace the previous channel and use a fresh channel topic', ()=>{
+  const channels=[];
+  const removed=[];
+  const client=fakeClient();
+  client.channel=(name)=>{
+    const channel={name,on(){return this;},subscribe(){this.subscribed=true;return this;}};
+    channels.push(channel);
+    return channel;
+  };
+  client.removeChannel=(channel)=>{removed.push(channel);};
+  const api=createRadioOpsApi(client);
+  const stopFirst=api.subscribeFleet(()=>{});
+  const stopSecond=api.subscribeFleet(()=>{});
+  assert.equal(channels.length,2);
+  assert.notEqual(channels[0].name,channels[1].name);
+  assert.deepEqual(removed,[channels[0]]);
+  stopFirst();
+  assert.deepEqual(removed,[channels[0]],'stale cleanup must not remove the active channel');
+  stopSecond();
+  assert.deepEqual(removed,[channels[0],channels[1]]);
+});
