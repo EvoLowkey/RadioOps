@@ -19,3 +19,12 @@ test('employee approval migration defines onboarding state, trigger safeguards, 
   assert.match(sql,/grant execute on function public\.disable_employee\(uuid\) to authenticated/i);
   assert.match(sql,/grant execute on function public\.enable_employee\(uuid\) to authenticated/i);
 });
+
+
+const valetPath=new URL('../supabase/migrations/202608230003_valet_associate_department.sql',import.meta.url);
+test('valet department migration enforces Valet Associate for self-signups',()=>{
+  assert.equal(fs.existsSync(valetPath),true,'valet migration file missing');
+  const sql=fs.readFileSync(valetPath,'utf8');
+  assert.match(sql,/v_department text := 'Valet Associate'/i);
+  assert.doesNotMatch(sql,/raw_user_meta_data->>'department'/i);
+});

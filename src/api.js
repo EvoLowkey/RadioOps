@@ -16,8 +16,8 @@ export function createRadioOpsApi(client){
   let fleetChannelSerial=0;
   return {
     async signIn(email,password){ return unwrap(await client.auth.signInWithPassword({email,password}),'Sign in failed'); },
-    async signUpEmployee({email,password,displayName,employeeId,department}){
-      const payload={email:email.trim(),password,options:{data:{display_name:displayName.trim(),employee_id:employeeId.trim(),department:department.trim()}}};
+    async signUpEmployee({email,password,displayName,employeeId}){
+      const payload={email:email.trim(),password,options:{data:{display_name:displayName.trim(),employee_id:employeeId.trim(),department:'Valet Associate'}}};
       return unwrap(await client.auth.signUp(payload),'Account creation failed');
     },
     async signOut(){ return unwrap(await client.auth.signOut(),'Sign out failed'); },

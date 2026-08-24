@@ -135,3 +135,6 @@ npm test
 ```
 
 The suite covers fleet behavior, API RPC contracts, approval migration safeguards, role/account gates, signup metadata, Manager employee administration surfaces, and the simplified employee workspace.
+
+## Employee department
+New self-registered employee accounts are automatically assigned to the **Valet Associate** department. Employees cannot change this value during signup. Manager accounts and existing manager departments are not modified.

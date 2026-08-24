@@ -11,7 +11,7 @@ function fakeClient(){
 test('signup sends only approved employee metadata',async()=>{
   const c=fakeClient(); const api=createRadioOpsApi(c);
   await api.signUpEmployee({email:'person@example.com',password:'pass1234',displayName:'  Alex Doe  ',employeeId:'  2042 ',department:' Security '});
-  assert.deepEqual(c.calls.find(x=>x[0]==='signup'),['signup',{email:'person@example.com',password:'pass1234',options:{data:{display_name:'Alex Doe',employee_id:'2042',department:'Security'}}}]);
+  assert.deepEqual(c.calls.find(x=>x[0]==='signup'),['signup',{email:'person@example.com',password:'pass1234',options:{data:{display_name:'Alex Doe',employee_id:'2042',department:'Valet Associate'}}}]);
 });
 
 test('manager employee actions use security definer RPCs',async()=>{

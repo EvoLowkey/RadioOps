@@ -17,3 +17,8 @@ test('manager shell includes employees administration view',()=>{
 test('production runtime config uses server endpoint',()=>{
   assert.match(html,/script src=["']\/api\/runtime-config["']/);
 });
+
+
+test('employee signup locks department to Valet Associate',()=>{
+  assert.match(html,/id=["']signUpDepartment["'][^>]*value=["']Valet Associate["'][^>]*readonly/i);
+});
