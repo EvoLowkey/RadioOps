@@ -165,3 +165,19 @@ In **Supabase → Authentication → URL Configuration** set:
 Employee signup explicitly requests `/auth/callback` as the verification redirect. Vercel routes that path to the branded callback page, which shows **Email verified successfully** or a friendly expired/invalid-link state instead of a platform 404. Email verification does not approve the employee; the existing Manager approval step still applies.
 
 If you later connect a custom domain, add that domain's `/auth/callback` URL to Supabase and use the production domain as the Site URL.
+
+## Permanent Employee Removal
+
+Managers can permanently remove a non-manager employee from **Employees**. RadioOps blocks removal while that employee has an open radio assignment. Removal revokes access, deletes the Supabase Auth login, preserves historical assignments/audit identity, and allows the same employee ID to be used again if the person later signs up as a new account.
+
+### Required Supabase migration
+Run `supabase/migrations/202608230006_employee_removal.sql` in the Supabase SQL Editor after migrations 001–005.
+
+### Required Vercel server secret
+Add this environment variable to the Vercel project for Production and Preview:
+
+`SUPABASE_SERVICE_ROLE_KEY`
+
+Set its value to the project's Supabase **service_role / secret server key**. This key is privileged: keep it only in Vercel Environment Variables, never paste it into `runtime-config.js`, `index.html`, frontend JavaScript, GitHub, or employee devices.
+
+After adding the variable, redeploy Vercel. The browser calls `/api/remove-employee` with the signed-in Manager's access token; the server verifies Manager status before using the secret key to remove the target Auth user.
