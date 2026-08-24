@@ -1,4 +1,4 @@
-# RadioOps Production — Employee Signup & Approval Edition
+# Valet Ops HQ — RadioOps Production
 
 RadioOps is a shared 40-radio tracking system for WT-01 through WT-40. The production app uses Supabase Auth + PostgreSQL for identity, approvals, shared fleet data, and database-enforced authorization, with Vercel hosting the frontend.
 
@@ -195,3 +195,16 @@ The existing email-verification callback should remain:
 `https://www.valetopshq.com/auth/callback`
 
 The Reset Password email template can continue using Supabase's `{{ .ConfirmationURL }}` variable; RadioOps requests the recovery email with the Valet Ops HQ reset route as the redirect destination.
+
+
+## Radio condition management
+
+Run `supabase/migrations/202608240007_radio_condition_management.sql` after migrations 001-006. Managers can mark radios Available, Lost, Damaged, or In Repair with an operational reason. Lost radios may keep an open assignment so accountability remains connected to the last employee; Damaged/In Repair radios require the active assignment to be resolved first. Employees can only check out AVAILABLE radios.
+
+## Help, support, privacy and terms
+
+The app includes a role-aware Help & Support view plus Privacy and Terms controls in the footer. Employee support directs users to their workplace Manager; no monitored support inbox is assumed. Managers also receive a production checklist covering backups, service limits, Manager access, condition reviews, and post-deployment workflow tests.
+
+## Resend verification email
+
+The sign-in screen includes **Resend verification email**. Enter the employee email first, then use the action. Supabase/Resend rate limits still apply.

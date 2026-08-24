@@ -25,6 +25,10 @@ export function createRadioOpsApi(client){
       const origin=globalThis?.location?.origin || 'https://www.valetopshq.com';
       return unwrap(await client.auth.resetPasswordForEmail(email.trim(),{redirectTo:`${origin}/auth/reset-password`}),'Password reset request failed');
     },
+    async resendVerification(email){
+      const origin=globalThis?.location?.origin || 'https://www.valetopshq.com';
+      return unwrap(await client.auth.resend({type:'signup',email:email.trim(),options:{emailRedirectTo:`${origin}/auth/callback`}}),'Verification email could not be resent');
+    },
     async signOut(){ return unwrap(await client.auth.signOut(),'Sign out failed'); },
     async getSession(){ const data=unwrap(await client.auth.getSession(),'Unable to restore session'); return data?.session ?? null; },
     async loadProfile(userId){ return unwrap(await client.from('profiles').select('*').eq('id',userId).single(),'Profile unavailable'); },
@@ -36,6 +40,7 @@ export function createRadioOpsApi(client){
     async returnRadio(radioId){ return unwrap(await client.rpc('return_radio',{p_radio_id:radioId}),'Return failed'); },
     async returnRadioVerified(radioId){ return unwrap(await client.rpc('return_radio_verified',{p_radio_id:radioId}),'QR verified return failed'); },
     async setRepairState(radioId,inRepair){ return unwrap(await client.rpc('set_radio_repair',{p_radio_id:radioId,p_in_repair:Boolean(inRepair)}),'Repair update failed'); },
+    async setRadioCondition(radioId,status,reason=''){ return unwrap(await client.rpc('set_radio_condition',{p_radio_id:radioId,p_status:String(status).toUpperCase(),p_reason:String(reason||'').trim()||null}),'Radio condition update failed'); },
     async setDockState(radioId,dockState){ return unwrap(await client.rpc('set_dock_state',{p_radio_id:radioId,p_dock_state:dockState}),'Dock update failed'); },
     async approveEmployee(profileId){ return unwrap(await client.rpc('approve_employee',{p_profile_id:profileId}),'Employee approval failed'); },
     async rejectEmployee(profileId){ return unwrap(await client.rpc('reject_employee',{p_profile_id:profileId}),'Employee rejection failed'); },

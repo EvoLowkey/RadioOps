@@ -10,14 +10,14 @@ export function getDockCounts(radios){
 }
 export function getFleetHealth(state){
   const active=state.radios.filter(r=>['IN_USE','OVERDUE'].includes(r.status)).length;
-  const attention=state.radios.filter(r=>['OVERDUE','REPAIR'].includes(r.status)).length;
+  const attention=state.radios.filter(r=>['OVERDUE','REPAIR','LOST','DAMAGED'].includes(r.status)).length;
   const ready=state.radios.filter(r=>r.status==='AVAILABLE').length;
   return {ready,active,attention,utilization:Math.round(active/state.radios.length*100)};
 }
 export function getRadioDetail(state,radioId){
   const r=state.radios.find(x=>x.id===radioId);
   if(!r) return null;
-  const labels={AVAILABLE:'Available',IN_USE:'In Use',OVERDUE:'Overdue',REPAIR:'In Repair'};
+  const labels={AVAILABLE:'Available',IN_USE:'In Use',OVERDUE:'Overdue',REPAIR:'In Repair',LOST:'Lost',DAMAGED:'Damaged'};
   return {...r,assignment:r.employeeName||'Unassigned',dockLabel:`Slot ${String(r.dockSlot).padStart(2,'0')}`,statusLabel:labels[r.status]||r.status};
 }
 
@@ -46,7 +46,10 @@ export function buildProductionState({radios=[],assignments=[],profiles=[],profi
       expectedReturnAt:r.expected_return_at,
       returnedAt:r.last_returned_at,
       dockSlot:r.dock_slot,
-      dockState:r.dock_state
+      dockState:r.dock_state,
+      conditionReason:r.condition_reason||null,
+      conditionUpdatedAt:r.condition_updated_at||null,
+      conditionUpdatedBy:r.condition_updated_by||null
     };
   });
   const uiHistory=assignments.map(a=>({
@@ -76,7 +79,7 @@ export function summarizeEmployees(rows=[],radios=[]){
   return counts;
 }
 export function getEmployeeWorkspace(state,profile){
-  const activeRadio=state.radios.find(r=>r.assignedProfileId===profile?.id && ['IN_USE','OVERDUE'].includes(r.status)) || null;
+  const activeRadio=state.radios.find(r=>r.assignedProfileId===profile?.id && ['IN_USE','OVERDUE','LOST'].includes(r.status)) || null;
   const availableRadios=state.radios.filter(r=>r.status==='AVAILABLE');
   return {
     activeRadio,
