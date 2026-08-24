@@ -150,6 +150,56 @@
 
           <div class="stat-grid" id="statGrid"></div>
 
+          <section id="operationsOverview" class="operations-overview manager-only" aria-label="Manager operations overview">
+            <div class="card ops-shell">
+              <div class="card-header responsive-row ops-header">
+                <div>
+                  <p class="section-kicker">Manager operations overview</p>
+                  <h3>What needs attention right now</h3>
+                  <p>Track active handoffs, overdue radios, unavailable equipment, and the last known holder from one screen.</p>
+                </div>
+                <div class="ops-filters" aria-label="Operations overview filters">
+                  <div class="search-wrap"><span>⌕</span><input id="opsSearch" type="search" placeholder="Radio, employee, ID..." aria-label="Search operations overview"></div>
+                  <select id="opsFilter" aria-label="Filter operations overview">
+                    <option value="ALL">All priority radios</option>
+                    <option value="CHECKED_OUT">Checked out</option>
+                    <option value="OVERDUE">Overdue</option>
+                    <option value="UNAVAILABLE">Unavailable</option>
+                    <option value="LOST">Lost</option>
+                    <option value="DAMAGED">Damaged</option>
+                    <option value="REPAIR">In Repair</option>
+                  </select>
+                  <select id="opsDepartment" aria-label="Filter operations by department"><option value="ALL">All departments</option></select>
+                </div>
+              </div>
+              <div id="opsSummary" class="ops-summary" aria-label="Fleet priority counts"></div>
+              <div class="ops-grid">
+                <section class="ops-panel ops-panel-checked">
+                  <div class="ops-panel-head"><div><span class="ops-dot checked"></span><strong>Currently Checked Out</strong></div><span id="opsCheckedCount" class="ops-count">0</span></div>
+                  <div id="opsCheckedOut" class="ops-list"></div>
+                </section>
+                <section class="ops-panel ops-panel-overdue">
+                  <div class="ops-panel-head"><div><span class="ops-dot overdue"></span><strong>Overdue / Unreturned</strong></div><span id="opsOverdueCount" class="ops-count">0</span></div>
+                  <div id="opsOverdue" class="ops-list"></div>
+                </section>
+                <section class="ops-panel ops-panel-unavailable">
+                  <div class="ops-panel-head"><div><span class="ops-dot unavailable"></span><strong>Unavailable Radios</strong></div><span id="opsUnavailableCount" class="ops-count">0</span></div>
+                  <div id="opsUnavailable" class="ops-list"></div>
+                </section>
+              </div>
+              <div class="ops-bottom-grid">
+                <section class="ops-activity-panel">
+                  <div class="ops-panel-head"><div><span class="ops-dot activity"></span><strong>Recent Operational Activity</strong></div><button class="text-btn" type="button" data-jump="audit">View audit log</button></div>
+                  <div id="opsActivity" class="ops-activity-list"></div>
+                </section>
+                <aside class="ops-guidance">
+                  <span class="ops-guidance-icon">!</span>
+                  <div><strong>Shift accountability</strong><p>Resolve overdue and unavailable radios before closing the shift. Last-holder information is retained even after a radio is returned or marked unavailable.</p></div>
+                </aside>
+              </div>
+            </div>
+          </section>
+
           <div class="dashboard-grid">
             <div class="card inventory-card">
               <div class="card-header responsive-row">

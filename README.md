@@ -208,3 +208,7 @@ The app includes a role-aware Help & Support view plus Privacy and Terms control
 ## Resend verification email
 
 The sign-in screen includes **Resend verification email**. Enter the employee email first, then use the action. Supabase/Resend rate limits still apply.
+
+## Manager Operations Overview
+
+Managers land on a live operations overview that highlights currently checked-out radios, overdue/unreturned radios, Lost/Damaged/In Repair units, and the last known holder for each priority asset. Search and filters can narrow by radio, employee, status group, or department. Quick actions open the radio detail, employee record, Manager return, or condition-management workflow, while recent protected audit events appear in the same view. Overdue status is derived from the expected return time and does not rewrite the stored radio assignment just for display.

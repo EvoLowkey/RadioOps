@@ -89,3 +89,69 @@ export function getEmployeeWorkspace(state,profile){
     recentHistory:sortHistoryNewestFirst(state.history.filter(h=>h.profileId===profile?.id)).slice(0,5)
   };
 }
+
+export function getLastKnownHolder(state,radioId){
+  const radio=(state?.radios||[]).find(r=>r.id===radioId);
+  if(radio?.assignedProfileId || radio?.employeeName){
+    return {
+      employeeName:radio.employeeName||'Assigned employee',
+      employeeId:radio.employeeId||null,
+      department:radio.department||null,
+      checkoutAt:radio.checkoutAt||null,
+      profileId:radio.assignedProfileId||null
+    };
+  }
+  const latest=(state?.history||[])
+    .filter(h=>h.radioId===radioId)
+    .sort((a,b)=>new Date(b.checkoutAt||0)-new Date(a.checkoutAt||0))[0];
+  if(!latest)return null;
+  return {employeeName:latest.employeeName||'Unknown employee',employeeId:latest.employeeId||null,department:latest.department||null,checkoutAt:latest.checkoutAt||null,profileId:latest.profileId||null};
+}
+
+function opsSearchText(state,radio){
+  const holder=getLastKnownHolder(state,radio.id);
+  return [radio.id,radio.status,radio.employeeName,radio.employeeId,radio.department,holder?.employeeName,holder?.employeeId,holder?.department,radio.conditionReason].filter(Boolean).join(' ').toLowerCase();
+}
+
+export function getManagerOperationsOverview(state,query='',filter='ALL',department='ALL'){
+  const radios=state?.radios||[];
+  const q=String(query||'').trim().toLowerCase();
+  const matchesGroup=r=>filter==='ALL' || (filter==='CHECKED_OUT'&&['IN_USE','OVERDUE'].includes(r.status)) || (filter==='OVERDUE'&&r.status==='OVERDUE') || (filter==='UNAVAILABLE'&&['LOST','DAMAGED','REPAIR'].includes(r.status)) || r.status===filter;
+  const matchesDepartment=r=>{
+    if(!department||department==='ALL')return true;
+    const holder=getLastKnownHolder(state,r.id);
+    return (r.department||holder?.department||'')===department;
+  };
+  const all=radios.filter(r=>matchesGroup(r)&&matchesDepartment(r)&&(!q||opsSearchText(state,r).includes(q)));
+  const withHolder=r=>({...r,lastHolder:getLastKnownHolder(state,r.id)});
+  const checkedOut=all.filter(r=>['IN_USE','OVERDUE'].includes(r.status)).sort((a,b)=>{
+    if(a.status!==b.status)return a.status==='OVERDUE'?-1:1;
+    return new Date(a.checkoutAt||0)-new Date(b.checkoutAt||0);
+  }).map(withHolder);
+  const overdue=all.filter(r=>r.status==='OVERDUE').sort((a,b)=>new Date(a.checkoutAt||0)-new Date(b.checkoutAt||0)).map(withHolder);
+  const unavailable=all.filter(r=>['LOST','DAMAGED','REPAIR'].includes(r.status)).sort((a,b)=>a.id.localeCompare(b.id)).map(withHolder);
+  const counts={
+    available:radios.filter(r=>r.status==='AVAILABLE').length,
+    checkedOut:radios.filter(r=>['IN_USE','OVERDUE'].includes(r.status)).length,
+    overdue:radios.filter(r=>r.status==='OVERDUE').length,
+    lost:radios.filter(r=>r.status==='LOST').length,
+    damaged:radios.filter(r=>r.status==='DAMAGED').length,
+    repair:radios.filter(r=>r.status==='REPAIR').length
+  };
+  return {counts,all,checkedOut,overdue,unavailable};
+}
+
+export function getOperationalActivity(auditEvents=[],profiles=[],limit=8){
+  const profileMap=new Map(profiles.map(p=>[p.id,p]));
+  return [...auditEvents]
+    .sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0))
+    .slice(0,limit)
+    .map(e=>({
+      id:e.id,
+      type:e.event_type||'SYSTEM_EVENT',
+      radioId:e.radio_id||null,
+      actorName:profileMap.get(e.actor_profile_id)?.display_name||e.actor_profile_id||'System',
+      createdAt:e.created_at||null,
+      metadata:e.metadata||{}
+    }));
+}
