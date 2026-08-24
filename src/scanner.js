@@ -5,12 +5,51 @@ export function parseRadioCode(value){
   const n=Number(m[1]);
   return n>=1&&n<=40?`WT-${String(n).padStart(2,'0')}`:null;
 }
-export function canUseBarcodeDetector(){ return typeof BarcodeDetector!=='undefined'; }
+
+export function getScannerMode({
+  hasBarcodeDetector=typeof globalThis.BarcodeDetector!=='undefined',
+  hasJsQr=typeof globalThis.jsQR==='function',
+  hasGetUserMedia=Boolean(globalThis.navigator?.mediaDevices?.getUserMedia)
+}={}){
+  if(!hasGetUserMedia) return null;
+  if(hasBarcodeDetector) return 'native';
+  if(hasJsQr) return 'jsqr';
+  return null;
+}
+
+export function canUseBarcodeDetector(){ return typeof globalThis.BarcodeDetector!=='undefined'; }
+export function canUseCameraQrScanner(){ return Boolean(getScannerMode()); }
+
 export function matchesAssignedRadio(scannedValue, assignedRadioId){
   const scanned=parseRadioCode(scannedValue);
   const assigned=parseRadioCode(assignedRadioId);
   return Boolean(scanned&&assigned&&scanned===assigned);
 }
+
 export function getPreferredCameraConstraints(){
   return {video:{facingMode:{ideal:'environment'}},audio:false};
+}
+
+export function cameraErrorMessage(err){
+  const denied=err?.name==='NotAllowedError'||err?.name==='SecurityError';
+  if(denied){
+    return 'Allow camera access to scan the radio QR code. On iPhone/iPad, open Safari settings for this website and set Camera to Allow, then try again.';
+  }
+  if(err?.name==='NotFoundError'||err?.name==='OverconstrainedError'){
+    return 'No usable camera was found. Close other apps using the camera, confirm camera access is enabled, and try again.';
+  }
+  return 'Camera could not be started. Close other apps using the camera, confirm browser camera permission, and try again.';
+}
+
+export function decodeFrameWithJsQr(video, canvas, decoder=globalThis.jsQR){
+  if(typeof decoder!=='function'||!video||!canvas||video.readyState<2) return null;
+  const width=video.videoWidth||0, height=video.videoHeight||0;
+  if(!width||!height) return null;
+  canvas.width=width; canvas.height=height;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  if(!ctx) return null;
+  ctx.drawImage(video,0,0,width,height);
+  const image=ctx.getImageData(0,0,width,height);
+  const result=decoder(image.data,width,height,{inversionAttempts:'dontInvert'});
+  return result?.data??null;
 }
