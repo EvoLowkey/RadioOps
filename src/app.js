@@ -372,25 +372,55 @@ const legalCopy={privacy:`<p>Valet Radio HQ stores account identity, employee ID
 const dialog=$('#scannerDialog'),video=$('#scannerVideo');
 function stopScanner(){if(scannerTimer)clearInterval(scannerTimer);scannerTimer=null;if(scannerStream){scannerStream.getTracks().forEach(t=>t.stop());scannerStream=null;}if(dialog.open)dialog.close();}
 async function openScanner(target,expectedRadioId=null){
-  scannerTarget=target;const employeeReturn=target==='employeeReturn',employeeCheckout=target==='employeeCheckout',employeeScan=employeeReturn||employeeCheckout,report=target==='manager'?showMessage:employeeMessage,scannerMode=getScannerMode();
+  scannerTarget=target;
+  const employeeReturn=target==='employeeReturn',employeeCheckout=target==='employeeCheckout',employeeScan=employeeReturn||employeeCheckout,report=target==='manager'?showMessage:employeeMessage;
+  let scannerMode=getScannerMode();
   if(!scannerMode){const action=employeeReturn?'return':employeeCheckout?'check out':'select';report(employeeScan?`Camera barcode scanning is required to ${action} your radio. Open Valet Radio HQ in Safari on iPhone/iPad or Chrome on Android and allow camera access.`:'Camera barcode scanning is unavailable in this browser. Use the radio dropdown.','error');return;}
   if(employeeCheckout){const vm=getEmployeeWorkspace(state,profile);if(!vm.canCheckout){employeeMessage('Return your current radio before checking out another.','error');return;}if(!selectedShiftCode){employeeMessage('Select your scheduled shift before scanning a radio.','error');return;}}
   try{
-    dialog.showModal();$('#scannerStatus').textContent=employeeReturn?`Allow camera access and scan the secure barcode on ${expectedRadioId}.`:employeeCheckout?'Allow camera access and scan the secure barcode on the physical radio you are taking.':'Allow camera access, then point at the radio barcode.';
-    scannerStream=await navigator.mediaDevices.getUserMedia(getPreferredCameraConstraints());video.setAttribute('playsinline','');video.muted=true;video.srcObject=scannerStream;await video.play();
-    const detector=scannerMode==='native'?new BarcodeDetector({formats:['code_128']}):null,
-      scanCanvas=scannerMode==='zxing'?document.createElement('canvas'):null,
-      zxingReader=scannerMode==='zxing'?new ZXing.BrowserMultiFormatReader():null;let scanBusy=false;
-    $('#scannerStatus').textContent=employeeReturn?`Scan ${expectedRadioId}'s secure barcode to confirm the return.`:employeeCheckout?'Scanning secure radio barcode…':'Scanning…';
-    scannerTimer=setInterval(async()=>{if(scanBusy)return;try{
-      let values=[];if(detector)values=(await detector.detect(video)).map(code=>code.rawValue);else{const value=decodeFrameWithZxing(video,scanCanvas,zxingReader);if(value)values=[value];}
-      for(const value of values){
-        const raw=String(value||'').trim();if(!raw)continue;
-        if(employeeReturn){scanBusy=true;$('#scannerStatus').textContent='Secure Barcode read. Verifying assigned radio…';stopScanner();await mutate(()=>api.returnRadioSecure(raw),`${expectedRadioId} returned • Secure Barcode Verified`,{employee:true});return;}
-        if(employeeCheckout){scanBusy=true;$('#scannerStatus').textContent='Secure Barcode read. Verifying radio availability…';stopScanner();await mutate(()=>api.checkoutRadioSecure(raw,selectedShiftCode,getShiftWorkDate(selectedShiftCode,new Date())),`Radio checked out • ${shiftLabel(selectedShiftCode)} • Secure Barcode Verified`,{employee:true});return;}
-        const id=parseRadioCode(raw);if(!id)continue;const select=$('#radioSelect'),opt=[...select.options].find(o=>o.value===id);if(opt){select.value=id;updateSelectedVisual();$('#scannerStatus').textContent=`Found ${id}`;setTimeout(stopScanner,450);return;}$('#scannerStatus').textContent=`${id} is not eligible for this action.`;
+    dialog.showModal();
+    $('#scannerStatus').textContent=employeeReturn?`Allow camera access and scan the secure barcode on ${expectedRadioId}.`:employeeCheckout?'Allow camera access and scan the secure barcode on the physical radio you are taking.':'Allow camera access, then point at the radio barcode.';
+    scannerStream=await navigator.mediaDevices.getUserMedia(getPreferredCameraConstraints());
+    video.setAttribute('playsinline','');video.muted=true;video.srcObject=scannerStream;await video.play();
+
+    let detector=scannerMode==='native'?new BarcodeDetector({formats:['code_128']}):null;
+    let scanCanvas=document.createElement('canvas');
+    let zxingReader=scannerMode==='zxing'?new ZXing.BrowserMultiFormatReader():null;
+    let scanBusy=false,nativeEmptyReads=0;
+    const switchToZxing=()=>{
+      if(!globalThis.ZXing?.BrowserMultiFormatReader)return false;
+      scannerMode='zxing';detector=null;zxingReader=zxingReader||new ZXing.BrowserMultiFormatReader();nativeEmptyReads=0;
+      $('#scannerStatus').textContent='Scanning secure radio barcode… Place the barcode across the highlighted line.';
+      return true;
+    };
+
+    $('#scannerStatus').textContent=employeeReturn?`Scan ${expectedRadioId}'s secure barcode across the highlighted line.`:employeeCheckout?'Scanning secure radio barcode… Place the barcode across the highlighted line.':'Scanning… Place the barcode across the highlighted line.';
+    scannerTimer=setInterval(async()=>{
+      if(scanBusy)return;
+      try{
+        let values=[];
+        if(scannerMode==='native'&&detector){
+          values=(await detector.detect(video)).map(code=>code.rawValue).filter(Boolean);
+          if(!values.length){nativeEmptyReads+=1;if(nativeEmptyReads>=8)switchToZxing();}else nativeEmptyReads=0;
+        }else{
+          const value=decodeFrameWithZxing(video,scanCanvas,zxingReader);
+          if(value)values=[value];
+        }
+        for(const value of values){
+          const raw=String(value||'').trim();if(!raw)continue;
+          $('#scannerStatus').textContent='Barcode detected — verifying radio…';
+          if(employeeReturn){scanBusy=true;stopScanner();await mutate(()=>api.returnRadioSecure(raw),`${expectedRadioId} returned • Secure Barcode Verified`,{employee:true});return;}
+          if(employeeCheckout){scanBusy=true;stopScanner();await mutate(()=>api.checkoutRadioSecure(raw,selectedShiftCode,getShiftWorkDate(selectedShiftCode,new Date())),`Radio checked out • ${shiftLabel(selectedShiftCode)} • Secure Barcode Verified`,{employee:true});return;}
+          const id=parseRadioCode(raw);if(!id)continue;
+          const select=$('#radioSelect'),opt=[...select.options].find(o=>o.value===id);
+          if(opt){select.value=id;updateSelectedVisual();$('#scannerStatus').textContent=`Found ${id}`;setTimeout(stopScanner,450);return;}
+          $('#scannerStatus').textContent=`${id} is not eligible for this action.`;
+        }
+      }catch(err){
+        if(scannerMode==='native'&&switchToZxing())return;
+        if(employeeScan){scanBusy=false;$('#scannerStatus').textContent=humanError(err);}
       }
-    }catch(err){if(employeeScan){scanBusy=false;$('#scannerStatus').textContent=humanError(err);}}},300);
+    },300);
   }catch(err){stopScanner();const message=cameraErrorMessage(err);report(employeeScan?message:'Camera access was unavailable. '+message,'error');}
 }
 $('#closeScanner').addEventListener('click',stopScanner);$('#scanSupport').textContent=canUseCameraQrScanner()?'Camera barcode scanning is available in this browser.':'Camera barcode scanning may be unavailable here. Employee checkout and return require a supported camera browser.';$('#scanBtn').addEventListener('click',()=>openScanner('manager'));$('#employeeScanBtn').addEventListener('click',beginEmployeeCheckout);

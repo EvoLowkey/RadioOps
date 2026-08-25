@@ -6,12 +6,21 @@ export function parseRadioCode(value){
   return n>=1&&n<=40?`WT-${String(n).padStart(2,'0')}`:null;
 }
 
+export function isAppleMobileScannerDevice(navigatorLike=globalThis.navigator){
+  const ua=String(navigatorLike?.userAgent||'');
+  const platform=String(navigatorLike?.platform||'');
+  const touchPoints=Number(navigatorLike?.maxTouchPoints||0);
+  return /iPad|iPhone|iPod/i.test(ua)||(platform==='MacIntel'&&touchPoints>1);
+}
+
 export function getScannerMode({
   hasBarcodeDetector=typeof globalThis.BarcodeDetector!=='undefined',
   hasZxing=Boolean(globalThis.ZXing?.BrowserMultiFormatReader),
-  hasGetUserMedia=Boolean(globalThis.navigator?.mediaDevices?.getUserMedia)
+  hasGetUserMedia=Boolean(globalThis.navigator?.mediaDevices?.getUserMedia),
+  isAppleMobile=isAppleMobileScannerDevice()
 }={}){
   if(!hasGetUserMedia) return null;
+  if(isAppleMobile&&hasZxing) return 'zxing';
   if(hasBarcodeDetector) return 'native';
   if(hasZxing) return 'zxing';
   return null;
@@ -33,7 +42,7 @@ export function getPreferredCameraConstraints(){
 export function cameraErrorMessage(err){
   const denied=err?.name==='NotAllowedError'||err?.name==='SecurityError';
   if(denied){
-    return 'Allow camera access to scan the radio QR code. On iPhone/iPad, open Safari settings for this website and set Camera to Allow, then try again.';
+    return 'Allow camera access to scan the radio barcode. On iPhone/iPad, open Safari settings for this website and set Camera to Allow, then try again.';
   }
   if(err?.name==='NotFoundError'||err?.name==='OverconstrainedError'){
     return 'No usable camera was found. Close other apps using the camera, confirm camera access is enabled, and try again.';
