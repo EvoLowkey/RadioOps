@@ -426,10 +426,10 @@
   </dialog>
 
   <dialog id="scannerDialog">
-    <div class="dialog-head"><div><p class="section-kicker light">Asset scanner</p><h3>Scan Radio Barcode</h3></div><button id="closeScanner" class="icon-btn">×</button></div>
+    <div class="dialog-head"><div><p class="section-kicker light">Asset scanner</p><h3>Scan Radio QR Code</h3></div><button id="closeScanner" class="icon-btn">×</button></div>
     <div class="scanner-frame"><video id="scannerVideo" playsinline muted></video><div class="scan-reticle qr-scan-reticle"></div></div>
     <p class="scanner-guide">Center the QR code inside the highlighted box and hold the radio steady.</p>
-    <p id="scannerStatus">Allow camera access, then point the camera at the radio barcode.</p>
+    <p id="scannerStatus">Allow camera access, then point the camera at the radio QR code.</p><p id="scannerDiagnostic" class="scanner-diagnostic" aria-live="polite">Waiting for camera…</p>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>

@@ -77,3 +77,5 @@ dialog{border:0;border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,.35);paddin
 .scanner-guide{margin:0;padding:10px 16px 0;text-align:center;font-size:12px;font-weight:700;color:var(--text,#1b2736)}
 
 .qr-scan-reticle{width:min(68vw,280px);height:min(68vw,280px);max-height:280px;border-radius:18px}
+
+.scanner-diagnostic{margin:6px 16px 14px;padding:8px 10px;border-radius:10px;background:rgba(15,23,42,.07);font-size:12px;font-weight:800;letter-spacing:.02em}
