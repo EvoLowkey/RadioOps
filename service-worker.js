@@ -1,4 +1,4 @@
-const CACHE_NAME='valet-radio-hq-shell-v14';
+const CACHE_NAME='valet-radio-hq-shell-v15';
 const STATIC_SHELL=['/','/index.html','/styles.css','/manifest.webmanifest','/src/app.js','/src/api.js','/src/config.js','/src/permissions.js','/src/accountability.js','/src/shift-policy.js','/src/scanner.js','/src/state.js','/src/supabase-client.js','/src/view-models.js','/src/reset-password.js','/auth/reset-password.html','/icons/icon-192.png','/icons/icon-512.png','/icons/apple-touch-icon.png','/branding/valet-radio-hq-logo.png','/branding/valet-radio-hq-mark.png','/branding/favicon-64.png'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(STATIC_SHELL)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
