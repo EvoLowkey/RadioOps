@@ -54,7 +54,7 @@ export function buildDymo30336Label(radioId,token){
       <Text>${t}</Text><Type>QRCode</Type><Size>Small</Size><TextPosition>None</TextPosition>
       <TextFont Family="Arial" Size="6" Bold="False" Italic="False" Underline="False" Strikeout="False" /><CheckSumFont Family="Arial" Size="6" Bold="False" Italic="False" Underline="False" Strikeout="False" />
       <TextEmbedding>None</TextEmbedding><ECLevel>0</ECLevel><HorizontalAlignment>Center</HorizontalAlignment><QuietZonesPadding Left="0" Top="0" Right="0" Bottom="0" />
-    </BarcodeObject><Bounds X="110" Y="260" Width="1080" Height="1080" />
+    </BarcodeObject><Bounds X="780" Y="130" Width="1500" Height="1500" />
   </ObjectInfo>
   <ObjectInfo>
     <TextObject>

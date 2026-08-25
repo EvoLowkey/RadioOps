@@ -298,7 +298,8 @@ function switchView(id){if(!profile)return;const opRead=!isManager(profile)&&can
 function openDrawer(radioId){const d=getRadioDetail(state,radioId);if(!d)return;let action='';if(isManager(profile)){const returnBtn=d.assignedProfileId?`<button class="primary-btn" data-drawer-action="return" data-id="${d.id}">Return ${d.id}</button>`:'';action=`${returnBtn}<button class="secondary-btn" data-drawer-action="condition" data-id="${d.id}">Manage condition</button>`;}const condition=d.conditionReason?`<div class="condition-reason-card"><span>Condition note</span><strong>${escapeHtml(d.conditionReason)}</strong><small>${d.conditionUpdatedAt?`Updated ${fmt(d.conditionUpdatedAt)}`:''}</small></div>`:'';$('#drawerRadioId').textContent=d.id;$('#drawerContent').innerHTML=`<div class="drawer-device"><div class="radio-device" style="margin:45px auto 5px"><div class="antenna"></div><div class="screen"><span>POC</span><small>4G READY</small></div><div class="speaker"></div><div class="radio-label">${d.id}</div></div><div class="drawer-status"><span class="status-badge status-${d.status}">${d.statusLabel}</span></div></div><div class="detail-grid"><div class="detail-box"><span>Assigned to</span><strong>${escapeHtml(d.assignment)}</strong></div><div class="detail-box"><span>Employee ID</span><strong>${escapeHtml(d.employeeId||'—')}</strong></div><div class="detail-box"><span>Department</span><strong>${escapeHtml(d.department||'—')}</strong></div><div class="detail-box"><span>Dock position</span><strong>${d.dockLabel}</strong></div><div class="detail-box"><span>Charging state</span><strong>${dockLabel(d.dockState)}</strong></div><div class="detail-box"><span>Checkout</span><strong>${fmt(d.checkoutAt)}</strong></div></div>${condition}<div class="drawer-actions">${action}</div>`;$('#radioDrawer').classList.add('open');$('#radioDrawer').setAttribute('aria-hidden','false');$('#drawerBackdrop').classList.add('show');}
 function closeDrawer(){$('#radioDrawer').classList.remove('open');$('#radioDrawer').setAttribute('aria-hidden','true');$('#drawerBackdrop').classList.remove('show');}
 
-function openConditionDialog(radioId){const r=state.radios.find(x=>x.id===radioId);if(!r||!isManager(profile))return;const dialog=$('#conditionDialog'),select=$('#conditionStatus'),reason=$('#conditionReason');$('#conditionDialogTitle').textContent=`Manage ${radioId}`;dialog.dataset.radioId=radioId;const active=Boolean(r.assignedProfileId);const options=active?[['LOST','Lost']]:[['AVAILABLE','Available'],['REPAIR','In Repair'],['DAMAGED','Damaged'],['LOST','Lost']];select.innerHTML=options.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');const desired=options.some(([v])=>v===r.status)?r.status:options[0][0];select.value=desired;reason.value=r.conditionReason||'';$('#conditionNote').textContent=active?'This radio has an open assignment. It may be marked Lost for accountability, or returned before choosing another condition.':'Choose a condition and add a short operational reason. Reason is required for Lost, Damaged, and In Repair.';$('#conditionMessage').textContent='';dialog.showModal();updateConditionReasonRequirement();}
+function openConditionDialog(radioId){const r=state.radios.find(x=>x.id===radioId);if(!r||!isManager(profile))return;const dialog=$('#conditionDialog'),select=$('#conditionStatus'),reason=$('#conditionReason');$('#conditionDialogTitle').textContent=`Manage ${radioId}`;dialog.dataset.radioId=radioId;const active=Boolean(r.assignedProfileId);const options=active?[['LOST','Lost']]:[['AVAILABLE','Available'],['REPAIR','In Repair'],['DAMAGED','Damaged'],['LOST','Lost']];select.innerHTML=options.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');const desired=options.some(([v])=>v===r.status)?r.status:options[0][0];select.value=desired;reason.value=r.conditionReason||'';$('#conditionNote').textContent=active?'This radio has an open assignment. It may be marked Lost for accountability, or returned before choosing another condition.':'Choose a condition and add a short operational reason. Reason is required for Lost, Damaged, and In Repair.';$('#conditionMessage').textContent='';dialog.showModal();
+    setScannerDiagnostic('Waiting for camera…');updateConditionReasonRequirement();}
 function updateConditionReasonRequirement(){const required=$('#conditionStatus').value!=='AVAILABLE';$('#conditionReason').required=required;$('#conditionReason').placeholder=required?'Required: describe what happened':'Optional note';}
 function closeConditionDialog(){const d=$('#conditionDialog');if(d.open)d.close();}
 async function mutate(action,success,{employee=false}={}){try{setConnection('loading','Saving secure change');await action();await loadData({quiet:true});setConnection('ok','Supabase realtime connected');showToast(success);if(employee)employeeMessage(success,'success');return true;}catch(err){const msg=humanError(err);employee?employeeMessage(msg,'error'):showMessage(msg,'error');showToast(msg);await loadData({quiet:true});return false;}}
@@ -385,6 +386,9 @@ async function startZxingContinuousScan(video,onValue,onError){
   });
   return reader;
 }
+function setScannerDiagnostic(stage){
+  const el=$('#scannerDiagnostic');if(el)el.textContent=stage;
+}
 async function openScanner(target,expectedRadioId=null){
   scannerTarget=target;
   const employeeReturn=target==='employeeReturn',employeeCheckout=target==='employeeCheckout',employeeScan=employeeReturn||employeeCheckout,report=target==='manager'?showMessage:employeeMessage;
@@ -396,13 +400,14 @@ async function openScanner(target,expectedRadioId=null){
     $('#scannerStatus').textContent=employeeReturn?`Allow camera access and scan the secure QR on ${expectedRadioId}.`:employeeCheckout?'Allow camera access and scan the secure QR on the physical radio you are taking.':'Allow camera access, then point at the radio QR code.';
     scannerStream=await navigator.mediaDevices.getUserMedia(getPreferredCameraConstraints());
     video.setAttribute('playsinline','');video.muted=true;video.srcObject=scannerStream;await video.play();
+    setScannerDiagnostic('Camera ready');
 
     if(scannerMode==='zxing'){
       let handled=false;
       $('#scannerStatus').textContent=employeeReturn?`Scan ${expectedRadioId}'s secure QR across the highlighted line.`:employeeCheckout?'Scanning secure radio QR code… Place the QR code across the highlighted line.':'Scanning… Place the QR code across the highlighted line.';
       const handleValue=async value=>{
         if(handled)return;const raw=String(value||'').trim();if(!raw)return;handled=true;
-        $('#scannerStatus').textContent='Barcode detected — verifying radio…';
+        $('#scannerStatus').textContent='QR detected — verifying radio…';setScannerDiagnostic('QR detected — verifying radio');
         try{
           if(employeeReturn){stopScanner();await mutate(()=>api.returnRadioSecure(raw),`${expectedRadioId} returned • Secure QR Verified`,{employee:true});return;}
           if(employeeCheckout){stopScanner();await mutate(()=>api.checkoutRadioSecure(raw,selectedShiftCode,getShiftWorkDate(selectedShiftCode,new Date())),`Radio checked out • ${shiftLabel(selectedShiftCode)} • Secure QR Verified`,{employee:true});return;}
@@ -417,6 +422,7 @@ async function openScanner(target,expectedRadioId=null){
     }
 
     let detector=scannerMode==='native'?new BarcodeDetector({formats:['qr_code']}):null;
+    setScannerDiagnostic(scannerMode==='native'?'QR decoder loaded — native':'QR decoder loaded — fallback');
     let scanCanvas=document.createElement('canvas');
     let zxingReader=scannerMode==='zxing'?new ZXing.BrowserMultiFormatReader():null;
     let scanBusy=false,nativeEmptyReads=0;
@@ -429,6 +435,7 @@ async function openScanner(target,expectedRadioId=null){
     };
 
     $('#scannerStatus').textContent=employeeReturn?`Scan ${expectedRadioId}'s secure QR across the highlighted line.`:employeeCheckout?'Scanning secure radio QR code… Place the QR code across the highlighted line.':'Scanning… Place the QR code across the highlighted line.';
+    setScannerDiagnostic('Scanning frames');
     scannerTimer=setInterval(async()=>{
       if(scanBusy)return;
       try{
@@ -445,7 +452,7 @@ async function openScanner(target,expectedRadioId=null){
         }
         for(const value of values){
           const raw=String(value||'').trim();if(!raw)continue;
-          $('#scannerStatus').textContent='Barcode detected — verifying radio…';
+          $('#scannerStatus').textContent='QR detected — verifying radio…';setScannerDiagnostic('QR detected — verifying radio');
           if(employeeReturn){scanBusy=true;stopScanner();await mutate(()=>api.returnRadioSecure(raw),`${expectedRadioId} returned • Secure QR Verified`,{employee:true});return;}
           if(employeeCheckout){scanBusy=true;stopScanner();await mutate(()=>api.checkoutRadioSecure(raw,selectedShiftCode,getShiftWorkDate(selectedShiftCode,new Date())),`Radio checked out • ${shiftLabel(selectedShiftCode)} • Secure QR Verified`,{employee:true});return;}
           const id=parseRadioCode(raw);if(!id)continue;
