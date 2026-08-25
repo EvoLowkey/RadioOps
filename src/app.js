@@ -3,6 +3,7 @@ import { createRadioOpsApi } from './api.js';
 import { isManager, getAccountGate, canViewOperationalRadioData } from './permissions.js';
 import { localDateString, operationalRoleLabel, accountabilityBanner, shouldNotifyAccountability } from './accountability.js';
 import { getShiftWorkDate } from './shift-policy.js';
+import { buildDymo30336Label, dymoFilename } from './dymo-label.js';
 import { parseRadioCode, canUseCameraQrScanner, getScannerMode, matchesAssignedRadio, getPreferredCameraConstraints, cameraErrorMessage, decodeFrameWithJsQr, decodeFrameWithZxing } from './scanner.js';
 import {
   filterRadios, sortHistoryNewestFirst, getDockBank, getRecentActivity,
@@ -23,6 +24,7 @@ let client=null,api=null,session=null,profile=null,profiles=[],auditEvents=[];
 let state={radios:[],history:[]},mode='out',scannerTarget='manager',scannerStream=null,scannerTimer=null,toastTimer=null,unsubscribeFleet=null,refreshTimer=null;
 let selectedShiftCode=null,currentAgreement=null,accountabilityState=null,operationalCheckedOut=[],operationalHistory=[],disciplinaryRecords=[],lastNotifiedStatus=null;
 let managerIncidents=[],managerDiscipline=[],qrStatus=[];
+let currentDymoLabel=null;
 
 function updateClock(){if($('#systemTime'))$('#systemTime').textContent=new Intl.DateTimeFormat(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date());}
 function showToast(text){const el=$('#toast');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);}
@@ -167,6 +169,23 @@ function renderManagerAccountability(){
   $('#managerIncidentRows').innerHTML=managerIncidents.length?managerIncidents.slice(0,50).map(i=>`<div class="employee-history-item"><div class="employee-history-radio">${escapeHtml(i.radio_id)}</div><div><strong>${escapeHtml(i.incident_type)} • Occurrence ${i.occurrence_number}</strong><span>${escapeHtml(pm.get(i.profile_id)?.display_name||i.profile_id)} • ${fmt(i.created_at)} • ${escapeHtml(i.explanation||'')}</span></div></div>`).join(''):'<div class="empty-state">No radio incidents recorded.</div>';
   $('#managerDisciplineRows').innerHTML=managerDiscipline.length?managerDiscipline.slice(0,50).map(d=>`<div class="employee-history-item"><div class="employee-history-radio">${d.level==='WRITE_UP'?'WU':'WW'}</div><div><strong>${d.level==='WRITE_UP'?'Write-Up':'Written Warning'} • ${escapeHtml(pm.get(d.profile_id)?.display_name||d.profile_id)}</strong><span>${fmt(d.created_at)}${d.financial_review_required?' • Financial Review Required':''}${d.acknowledged_at?' • Acknowledged':''}</span></div></div>`).join(''):'<div class="empty-state">No warnings or write-ups recorded.</div>';
 }
+function downloadBlob(filename,content,type='application/octet-stream'){
+  const blob=content instanceof Blob?content:new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function downloadDymoLabel(radioId,token){
+  downloadBlob(dymoFilename(radioId),buildDymo30336Label(radioId,token),'application/xml');
+}
+async function downloadAllDymoLabels(items){
+  if(typeof JSZip!=='function') throw new Error('DYMO ZIP export is unavailable');
+  const zip=new JSZip();
+  for(const item of items) zip.file(dymoFilename(item.radioId),buildDymo30336Label(item.radioId,item.token));
+  const blob=await zip.generateAsync({type:'blob'});
+  downloadBlob('Valet-Radio-HQ-WT-01-to-WT-40-DYMO-30336-Labels.zip',blob,'application/zip');
+}
 function renderSecureBarcode(container,radioId,token){
   container.innerHTML='';
   const card=document.createElement('div');
@@ -177,17 +196,22 @@ function renderSecureBarcode(container,radioId,token){
   if(typeof JsBarcode!=='function') throw new Error('Barcode renderer unavailable');
   JsBarcode(svg,token,{format:'CODE128',displayValue:false,margin:8,height:62,width:2});
 }
-function showBarcodeLabel(radioId,token){$('#qrLabelTitle').textContent=radioId;renderSecureBarcode($('#qrPrintArea'),radioId,token);$('#qrLabelDialog').showModal();}
+function showBarcodeLabel(radioId,token){currentDymoLabel={radioId,token};$('#qrLabelTitle').textContent=radioId;renderSecureBarcode($('#qrPrintArea'),radioId,token);$('#qrLabelDialog').showModal();}
 async function rotateOneQr(radioId){
-  if(!confirm(`Generate a new secure QR for ${radioId}? Any previous ${radioId} barcode label will stop working immediately.`))return;
+  if(!confirm(`Generate a new secure barcode for ${radioId}? Any previous ${radioId} barcode label will stop working immediately.`))return;
   try{const result=await api.rotateRadioQrToken(radioId);showBarcodeLabel(radioId,result.token);showToast(`${radioId}: secure barcode generated`);await loadData({quiet:true});}catch(err){showToast(humanError(err));}
 }
 async function generateAllQrLabels(){
-  if(!confirm('Generate new secure barcodes for ALL 40 radios? This immediately invalidates every previous radio barcode label. Continue only when you are ready to print and install the complete new label set.'))return;
-  const btn=$('#generateAllQrBtn');btn.disabled=true;btn.textContent='Generating 0 / 40…';const items=[];
-  try{const results=await api.rotateAllRadioQrTokens();for(const result of results)items.push({radioId:result.radio_id,token:result.token});
-    const host=$('#qrBulkPrintArea');host.innerHTML='';for(const item of items){const cell=document.createElement('div');host.appendChild(cell);renderSecureBarcode(cell,item.radioId,item.token);}$('#qrBulkDialog').showModal();showToast('Secure label sheet generated. Print and install all labels.');await loadData({quiet:true});
-  }catch(err){showToast(humanError(err));}finally{btn.disabled=false;btn.textContent='Generate / Rotate All 40 Labels';}
+  if(!confirm('Generate new secure barcodes for ALL 40 radios? This immediately invalidates every previous radio barcode label. Continue only when you are ready to install the complete new label set.'))return;
+  const btn=$('#generateAllQrBtn');btn.disabled=true;btn.textContent='Generating 0 / 40…';
+  try{
+    const results=await api.rotateAllRadioQrTokens();
+    const items=results.map(result=>({radioId:result.radio_id,token:result.token}));
+    await downloadAllDymoLabels(items);
+    showToast('40 DYMO .label files downloaded as one ZIP.');
+    await loadData({quiet:true});
+  }catch(err){showToast(humanError(err));}
+  finally{btn.disabled=false;btn.textContent='Download All DYMO Labels';}
 }
 function openExceptionDialog(radioId,assignmentId){
   const a=state.history.find(h=>h.id===assignmentId)||state.history.find(h=>h.radioId===radioId&&!h.returnAt);if(!a){showToast('Open assignment not found');return;}
@@ -298,7 +322,12 @@ $('#qrAdminRows')?.addEventListener('click',e=>{const b=e.target.closest('[data-
 $('#generateAllQrBtn')?.addEventListener('click',generateAllQrLabels);
 $('#closeQrLabelDialog')?.addEventListener('click',()=>{$('#qrPrintArea').innerHTML='';$('#qrLabelDialog').close();});
 $('#closeQrBulkDialog')?.addEventListener('click',()=>{$('#qrBulkPrintArea').innerHTML='';$('#qrBulkDialog').close();});
-$('#printQrLabelBtn')?.addEventListener('click',()=>window.print());$('#printQrBulkBtn')?.addEventListener('click',()=>window.print());
+$('#downloadDymoLabelBtn')?.addEventListener('click',()=>{
+  if(!currentDymoLabel)return;
+  downloadDymoLabel(currentDymoLabel.radioId,currentDymoLabel.token);
+  showToast(`${currentDymoLabel.radioId}: DYMO label downloaded`);
+});
+$('#downloadAllDymoBtn')?.addEventListener('click',generateAllQrLabels);
 $('#closeExceptionDialog')?.addEventListener('click',()=>$('#exceptionDialog').close());
 $('#exceptionDiscipline')?.addEventListener('change',()=>{const level=$('#exceptionDiscipline').value;$('#financialReviewRequired').disabled=level!=='WRITE_UP';if(level!=='WRITE_UP')$('#financialReviewRequired').checked=false;$('#disciplineManagerNotes').required=level!=='NONE';});
 $('#exceptionForm')?.addEventListener('submit',async e=>{e.preventDefault();const assignmentId=$('#exceptionAssignmentId').value,type=$('#exceptionType').value,status=$('#exceptionRadioStatus').value,explanation=$('#exceptionExplanation').value.trim(),level=$('#exceptionDiscipline').value,notes=$('#disciplineManagerNotes').value.trim(),financial=$('#financialReviewRequired').checked;if(!explanation){$('#exceptionMessage').textContent='Manager explanation is required.';$('#exceptionMessage').className='form-message error';return;}if(level!=='NONE'&&!notes){$('#exceptionMessage').textContent='Manager notes are required for a warning or write-up.';$('#exceptionMessage').className='form-message error';return;}try{const incident=await api.resolveRadioReturnException(assignmentId,type,status,explanation);if(level!=='NONE')await api.createRadioDiscipline(incident.id,level,notes,financial);$('#exceptionDialog').close();showToast('Radio exception resolved and recorded');await loadData({quiet:true});}catch(err){$('#exceptionMessage').textContent=humanError(err);$('#exceptionMessage').className='form-message error';}});

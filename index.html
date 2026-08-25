@@ -335,7 +335,7 @@
 
         <section id="accountabilityAdmin" class="view manager-only">
           <div class="page-heading"><div><p class="eyebrow">Secure accountability</p><h2>Barcode Labels &amp; Incident Management</h2><p>Manage secure radio identities, return exceptions, and corrective-action records.</p></div><div class="page-chip">Manager only</div></div>
-          <div class="card"><div class="card-header responsive-row"><div><p class="section-kicker">Secure Barcode identities</p><h3>Radio Labels WT-01–WT-40</h3><p>Regenerating a Barcode immediately invalidates the previous label.</p></div><button id="generateAllQrBtn" class="primary-btn" type="button">Generate / Rotate All 40 Labels</button></div><div id="qrAdminRows" class="qr-admin-grid"></div></div>
+          <div class="card"><div class="card-header responsive-row"><div><p class="section-kicker">Secure Barcode identities</p><h3>Radio Labels WT-01–WT-40</h3><p>Regenerating a Barcode immediately invalidates the previous label.</p></div><button id="generateAllQrBtn" class="primary-btn" type="button">Download All DYMO Labels</button></div><div id="qrAdminRows" class="qr-admin-grid"></div></div>
           <div class="card"><div class="card-header"><div><p class="section-kicker">Exceptions</p><h3>Recent Radio Incidents</h3></div></div><div id="managerIncidentRows" class="employee-history-list"></div></div>
           <div class="card"><div class="card-header"><div><p class="section-kicker">Corrective action</p><h3>Warnings &amp; Write-Ups</h3></div></div><div id="managerDisciplineRows" class="employee-history-list"></div></div>
         </section>
@@ -396,12 +396,12 @@
 
   <dialog id="qrLabelDialog" class="legal-dialog qr-label-dialog">
     <div class="dialog-head"><div><p class="section-kicker light">Secure radio label</p><h3 id="qrLabelTitle">WT-01</h3></div><button id="closeQrLabelDialog" class="icon-btn" type="button">×</button></div>
-    <div class="legal-content"><div id="qrPrintArea" class="qr-print-area"></div><p class="condition-note">The Barcode contains a random secure identifier. Do not post the token text separately.</p><button id="printQrLabelBtn" class="primary-btn" type="button">Print Label</button></div>
+    <div class="legal-content"><div id="qrPrintArea" class="qr-print-area"></div><p class="condition-note">The barcode contains a random secure identifier. Download the DYMO 30336 .label file, then open it in DYMO Label Software.</p><button id="downloadDymoLabelBtn" class="primary-btn" type="button">Download DYMO Label</button></div>
   </dialog>
 
   <dialog id="qrBulkDialog" class="legal-dialog qr-bulk-dialog">
     <div class="dialog-head"><div><p class="section-kicker light">Secure label sheet</p><h3>WT-01–WT-40</h3></div><button id="closeQrBulkDialog" class="icon-btn" type="button">×</button></div>
-    <div class="legal-content"><div id="qrBulkPrintArea" class="qr-bulk-grid"></div><button id="printQrBulkBtn" class="primary-btn" type="button">Print All Labels</button></div>
+    <div class="legal-content"><div id="qrBulkPrintArea" class="qr-bulk-grid"></div><button id="downloadAllDymoBtn" class="primary-btn" type="button">Download All DYMO Labels</button></div>
   </dialog>
 
   <dialog id="legalDialog" class="legal-dialog">
@@ -426,6 +426,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script type="module" src="src/app.js"></script>
 </body>
 </html>
