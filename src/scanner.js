@@ -76,3 +76,13 @@ export function decodeFrameWithZxing(video, canvas, reader){
     return result?.getText?.() ?? result?.text ?? null;
   }catch{return null;}
 }
+
+export function createCode128ZxingReader(ZXingLib=globalThis.ZXing){
+  if(!ZXingLib?.BrowserMultiFormatReader) throw new Error('ZXing barcode scanner is unavailable.');
+  const hints=new Map();
+  if(ZXingLib.DecodeHintType?.POSSIBLE_FORMATS&&ZXingLib.BarcodeFormat?.CODE_128){
+    hints.set(ZXingLib.DecodeHintType.POSSIBLE_FORMATS,[ZXingLib.BarcodeFormat.CODE_128]);
+  }
+  if(ZXingLib.DecodeHintType?.TRY_HARDER) hints.set(ZXingLib.DecodeHintType.TRY_HARDER,true);
+  return new ZXingLib.BrowserMultiFormatReader(hints,300);
+}

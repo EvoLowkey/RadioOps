@@ -4,7 +4,7 @@ import { isManager, getAccountGate, canViewOperationalRadioData } from './permis
 import { localDateString, operationalRoleLabel, accountabilityBanner, shouldNotifyAccountability } from './accountability.js';
 import { getShiftWorkDate } from './shift-policy.js';
 import { buildDymo30336Label, dymoFilename } from './dymo-label.js';
-import { parseRadioCode, canUseCameraQrScanner, getScannerMode, matchesAssignedRadio, getPreferredCameraConstraints, cameraErrorMessage, decodeFrameWithJsQr, decodeFrameWithZxing } from './scanner.js';
+import { parseRadioCode, canUseCameraQrScanner, getScannerMode, matchesAssignedRadio, getPreferredCameraConstraints, cameraErrorMessage, decodeFrameWithJsQr, decodeFrameWithZxing, createCode128ZxingReader } from './scanner.js';
 import {
   filterRadios, sortHistoryNewestFirst, getDockBank, getRecentActivity,
   getFleetHealth, getDockCounts, getRadioDetail, buildProductionState,
@@ -21,7 +21,7 @@ const dockLabel=s=>({EMPTY:'Empty',CHARGING:'Charging',FULL:'Full',FAULT:'Fault'
 const approvalLabel=s=>({PENDING:'Pending',ACTIVE:'Active',DISABLED:'Disabled',REJECTED:'Rejected'}[s]||s);
 
 let client=null,api=null,session=null,profile=null,profiles=[],auditEvents=[];
-let state={radios:[],history:[]},mode='out',scannerTarget='manager',scannerStream=null,scannerTimer=null,toastTimer=null,unsubscribeFleet=null,refreshTimer=null;
+let state={radios:[],history:[]},mode='out',scannerTarget='manager',scannerStream=null,scannerTimer=null,zxingControls=null,toastTimer=null,unsubscribeFleet=null,refreshTimer=null;
 let selectedShiftCode=null,currentAgreement=null,accountabilityState=null,operationalCheckedOut=[],operationalHistory=[],disciplinaryRecords=[],lastNotifiedStatus=null;
 let managerIncidents=[],managerDiscipline=[],qrStatus=[];
 let currentDymoLabel=null;
@@ -370,7 +370,21 @@ const legalCopy={privacy:`<p>Valet Radio HQ stores account identity, employee ID
 // Legacy audit labels retained for regression compatibility: Barcode Verified Checkout; api.checkoutRadioVerified(id,expected)
 // Legacy audit label retained for regression compatibility: Barcode Verified Return
 const dialog=$('#scannerDialog'),video=$('#scannerVideo');
-function stopScanner(){if(scannerTimer)clearInterval(scannerTimer);scannerTimer=null;if(scannerStream){scannerStream.getTracks().forEach(t=>t.stop());scannerStream=null;}if(dialog.open)dialog.close();}
+function stopScanner(){
+  if(scannerTimer)clearInterval(scannerTimer);scannerTimer=null;
+  if(zxingControls){try{zxingControls.reset?.();zxingControls.stop?.();}catch{}zxingControls=null;}
+  if(scannerStream){scannerStream.getTracks().forEach(t=>t.stop());scannerStream=null;}
+  if(dialog.open)dialog.close();
+}
+async function startZxingContinuousScan(video,onValue,onError){
+  const reader=createCode128ZxingReader();
+  zxingControls=reader;
+  await reader.decodeFromVideoDevice(undefined,video,(result,err)=>{
+    if(result){const value=result.getText?.()??result.text??'';if(value)onValue(value);}
+    else if(err&&!(err instanceof (globalThis.ZXing?.NotFoundException||Error)))onError?.(err);
+  });
+  return reader;
+}
 async function openScanner(target,expectedRadioId=null){
   scannerTarget=target;
   const employeeReturn=target==='employeeReturn',employeeCheckout=target==='employeeCheckout',employeeScan=employeeReturn||employeeCheckout,report=target==='manager'?showMessage:employeeMessage;
@@ -382,6 +396,25 @@ async function openScanner(target,expectedRadioId=null){
     $('#scannerStatus').textContent=employeeReturn?`Allow camera access and scan the secure barcode on ${expectedRadioId}.`:employeeCheckout?'Allow camera access and scan the secure barcode on the physical radio you are taking.':'Allow camera access, then point at the radio barcode.';
     scannerStream=await navigator.mediaDevices.getUserMedia(getPreferredCameraConstraints());
     video.setAttribute('playsinline','');video.muted=true;video.srcObject=scannerStream;await video.play();
+
+    if(scannerMode==='zxing'){
+      let handled=false;
+      $('#scannerStatus').textContent=employeeReturn?`Scan ${expectedRadioId}'s secure barcode across the highlighted line.`:employeeCheckout?'Scanning secure radio barcode… Place the barcode across the highlighted line.':'Scanning… Place the barcode across the highlighted line.';
+      const handleValue=async value=>{
+        if(handled)return;const raw=String(value||'').trim();if(!raw)return;handled=true;
+        $('#scannerStatus').textContent='Barcode detected — verifying radio…';
+        try{
+          if(employeeReturn){stopScanner();await mutate(()=>api.returnRadioSecure(raw),`${expectedRadioId} returned • Secure Barcode Verified`,{employee:true});return;}
+          if(employeeCheckout){stopScanner();await mutate(()=>api.checkoutRadioSecure(raw,selectedShiftCode,getShiftWorkDate(selectedShiftCode,new Date())),`Radio checked out • ${shiftLabel(selectedShiftCode)} • Secure Barcode Verified`,{employee:true});return;}
+          const id=parseRadioCode(raw);if(!id){handled=false;$('#scannerStatus').textContent='Barcode read, but it is not a radio selection code.';return;}
+          const select=$('#radioSelect'),opt=[...select.options].find(o=>o.value===id);
+          if(opt){select.value=id;updateSelectedVisual();$('#scannerStatus').textContent=`Found ${id}`;setTimeout(stopScanner,450);return;}
+          handled=false;$('#scannerStatus').textContent=`${id} is not eligible for this action.`;
+        }catch(err){handled=false;$('#scannerStatus').textContent=humanError(err);}
+      };
+      await startZxingContinuousScan(video,handleValue,err=>{$('#scannerStatus').textContent=humanError(err);});
+      return;
+    }
 
     let detector=scannerMode==='native'?new BarcodeDetector({formats:['code_128']}):null;
     let scanCanvas=document.createElement('canvas');
