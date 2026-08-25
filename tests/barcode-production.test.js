@@ -7,25 +7,22 @@ const app=fs.readFileSync('src/app.js','utf8');
 const scanner=fs.readFileSync('src/scanner.js','utf8');
 const migration=fs.readFileSync('supabase/migrations/202608240012_code128_radio_credentials.sql','utf8');
 
-test('production UI loads Code 128 render and scan libraries',()=>{
-  assert.match(html,/JsBarcode/i);
+test('production UI loads QR render and scan libraries',()=>{
+  assert.match(html,/qrcodejs/i);
   assert.match(html,/@zxing\/library/i);
-  assert.doesNotMatch(html,/qrcodejs/i);
 });
 
-test('employee secure scanner accepts Code 128 in native detector and ZXing fallback',()=>{
-  assert.match(app,/code_128/);
-  assert.match(scanner,/zxing/i);
-  assert.doesNotMatch(app,/formats:\s*\['qr_code'\]/);
+test('employee secure scanner accepts QR in native detector and ZXing fallback',()=>{
+  assert.match(app,/formats:\s*\['qr_code'\]/);
+  assert.match(scanner,/jsQR|zxing/i);
 });
 
-test('manager label renderer uses Code 128 rather than QRCode',()=>{
-  assert.match(app,/JsBarcode/);
-  assert.match(app,/CODE128/);
-  assert.doesNotMatch(app,/new QRCode\(/);
+test('manager label renderer uses QR rather than QRCode',()=>{
+  assert.match(app,/renderSecureQr/);
+  assert.match(app,/new QRCode\(/);
 });
 
-test('new credentials are compact random tokens suitable for DYMO Code 128',()=>{
+test('new credentials are compact random tokens suitable for DYMO QR',()=>{
   assert.match(migration,/gen_random_bytes\(9\)/);
   assert.match(migration,/translate\(/i);
   assert.match(migration,/rotate_radio_qr_token/i);

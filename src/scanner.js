@@ -20,8 +20,8 @@ export function getScannerMode({
   isAppleMobile=isAppleMobileScannerDevice()
 }={}){
   if(!hasGetUserMedia) return null;
-  if(isAppleMobile&&hasZxing) return 'zxing';
   if(hasBarcodeDetector) return 'native';
+  if(typeof globalThis.jsQR==='function') return 'jsqr';
   if(hasZxing) return 'zxing';
   return null;
 }

@@ -16,13 +16,13 @@ export function normalizeRadioId(value){
 }
 
 export function dymoFilename(radioId){
-  return `Valet-Radio-HQ-${normalizeRadioId(radioId)}-30336.label`;
+  return `Valet-Radio-HQ-${normalizeRadioId(radioId)}-QR-30336.label`;
 }
 
 export function buildDymo30336Label(radioId,token){
   const radio=normalizeRadioId(radioId);
   const secure=String(token??'').trim();
-  if(!secure) throw new Error('Secure barcode token is required');
+  if(!secure) throw new Error('Secure QR token is required');
   const r=xmlEscape(radio),t=xmlEscape(secure);
   return `<?xml version="1.0" encoding="utf-8"?>
 <DieCutLabel Version="8.0" Units="twips" MediaType="Default">
@@ -49,12 +49,12 @@ export function buildDymo30336Label(radioId,token){
   </ObjectInfo>
   <ObjectInfo>
     <BarcodeObject>
-      <Name>SECURE_BARCODE</Name><ForeColor Alpha="255" Red="0" Green="0" Blue="0" /><BackColor Alpha="255" Red="255" Green="255" Blue="255" />
+      <Name>SECURE_QR</Name><ForeColor Alpha="255" Red="0" Green="0" Blue="0" /><BackColor Alpha="255" Red="255" Green="255" Blue="255" />
       <LinkedObjectName></LinkedObjectName><Rotation>Rotation0</Rotation><IsMirrored>False</IsMirrored><IsVariable>True</IsVariable><GroupID>-1</GroupID><IsOutlined>False</IsOutlined>
-      <Text>${t}</Text><Type>Code128Auto</Type><Size>Small</Size><TextPosition>None</TextPosition>
+      <Text>${t}</Text><Type>QRCode</Type><Size>Small</Size><TextPosition>None</TextPosition>
       <TextFont Family="Arial" Size="6" Bold="False" Italic="False" Underline="False" Strikeout="False" /><CheckSumFont Family="Arial" Size="6" Bold="False" Italic="False" Underline="False" Strikeout="False" />
       <TextEmbedding>None</TextEmbedding><ECLevel>0</ECLevel><HorizontalAlignment>Center</HorizontalAlignment><QuietZonesPadding Left="0" Top="0" Right="0" Bottom="0" />
-    </BarcodeObject><Bounds X="90" Y="390" Width="2880" Height="760" />
+    </BarcodeObject><Bounds X="110" Y="260" Width="1080" Height="1080" />
   </ObjectInfo>
   <ObjectInfo>
     <TextObject>
