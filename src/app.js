@@ -3,7 +3,7 @@ import { createRadioOpsApi } from './api.js';
 import { isManager, getAccountGate, canViewOperationalRadioData } from './permissions.js';
 import { localDateString, operationalRoleLabel, accountabilityBanner, shouldNotifyAccountability } from './accountability.js';
 import { getShiftWorkDate } from './shift-policy.js';
-import { parseRadioCode, canUseCameraQrScanner, getScannerMode, matchesAssignedRadio, getPreferredCameraConstraints, cameraErrorMessage, decodeFrameWithJsQr } from './scanner.js';
+import { parseRadioCode, canUseCameraQrScanner, getScannerMode, matchesAssignedRadio, getPreferredCameraConstraints, cameraErrorMessage, decodeFrameWithJsQr, decodeFrameWithZxing } from './scanner.js';
 import {
   filterRadios, sortHistoryNewestFirst, getDockBank, getRecentActivity,
   getFleetHealth, getDockCounts, getRadioDetail, buildProductionState,
@@ -162,24 +162,31 @@ function renderAudit(){if(!isManager(profile))return;const pm=mapProfiles();$('#
 function renderManagerAccountability(){
   if(!isManager(profile)||!$('#qrAdminRows'))return;
   const qmap=new Map(qrStatus.map(q=>[q.radio_id,q]));
-  $('#qrAdminRows').innerHTML=state.radios.map(r=>{const q=qmap.get(r.id);return `<div class="qr-admin-item"><strong>${r.id}</strong><span>${q?.generation?`QR generation ${q.generation}`:'No secure QR issued'}</span><small>${q?.rotated_at?`Updated ${fmt(q.rotated_at)}`:'Generate before printing label'}</small><button class="mini-btn ${q?.generation?'':'primary'}" data-qr-rotate="${r.id}">${q?.generation?'Regenerate QR':'Generate QR'}</button></div>`;}).join('');
+  $('#qrAdminRows').innerHTML=state.radios.map(r=>{const q=qmap.get(r.id);return `<div class="qr-admin-item"><strong>${r.id}</strong><span>${q?.generation?`Barcode generation ${q.generation}`:'No secure QR issued'}</span><small>${q?.rotated_at?`Updated ${fmt(q.rotated_at)}`:'Generate before printing label'}</small><button class="mini-btn ${q?.generation?'':'primary'}" data-qr-rotate="${r.id}">${q?.generation?'Regenerate Barcode':'Generate Barcode'}</button></div>`;}).join('');
   const pm=mapProfiles();
   $('#managerIncidentRows').innerHTML=managerIncidents.length?managerIncidents.slice(0,50).map(i=>`<div class="employee-history-item"><div class="employee-history-radio">${escapeHtml(i.radio_id)}</div><div><strong>${escapeHtml(i.incident_type)} • Occurrence ${i.occurrence_number}</strong><span>${escapeHtml(pm.get(i.profile_id)?.display_name||i.profile_id)} • ${fmt(i.created_at)} • ${escapeHtml(i.explanation||'')}</span></div></div>`).join(''):'<div class="empty-state">No radio incidents recorded.</div>';
   $('#managerDisciplineRows').innerHTML=managerDiscipline.length?managerDiscipline.slice(0,50).map(d=>`<div class="employee-history-item"><div class="employee-history-radio">${d.level==='WRITE_UP'?'WU':'WW'}</div><div><strong>${d.level==='WRITE_UP'?'Write-Up':'Written Warning'} • ${escapeHtml(pm.get(d.profile_id)?.display_name||d.profile_id)}</strong><span>${fmt(d.created_at)}${d.financial_review_required?' • Financial Review Required':''}${d.acknowledged_at?' • Acknowledged':''}</span></div></div>`).join(''):'<div class="empty-state">No warnings or write-ups recorded.</div>';
 }
-function renderSecureQr(container,radioId,token){
-  container.innerHTML='';const card=document.createElement('div');card.className='qr-label-card';card.innerHTML=`<div class="qr-label-brand">VALET RADIO HQ</div><h2>${escapeHtml(radioId)}</h2><div class="qr-code-box"></div><small>SCAN TO CHECK OUT / RETURN</small>`;container.appendChild(card);const box=card.querySelector('.qr-code-box');new QRCode(box,{text:token,width:160,height:160,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+function renderSecureBarcode(container,radioId,token){
+  container.innerHTML='';
+  const card=document.createElement('div');
+  card.className='qr-label-card barcode-label-card';
+  card.innerHTML=`<div class="qr-label-brand">VALET RADIO HQ</div><h2>${escapeHtml(radioId)}</h2><svg class="secure-code128" aria-label="${escapeHtml(radioId)} secure Code 128 barcode"></svg><small>SCAN TO CHECK OUT / RETURN</small>`;
+  container.appendChild(card);
+  const svg=card.querySelector('.secure-code128');
+  if(typeof JsBarcode!=='function') throw new Error('Barcode renderer unavailable');
+  JsBarcode(svg,token,{format:'CODE128',displayValue:false,margin:8,height:62,width:2});
 }
-function showQrLabel(radioId,token){$('#qrLabelTitle').textContent=radioId;renderSecureQr($('#qrPrintArea'),radioId,token);$('#qrLabelDialog').showModal();}
+function showBarcodeLabel(radioId,token){$('#qrLabelTitle').textContent=radioId;renderSecureBarcode($('#qrPrintArea'),radioId,token);$('#qrLabelDialog').showModal();}
 async function rotateOneQr(radioId){
-  if(!confirm(`Generate a new secure QR for ${radioId}? Any previous ${radioId} QR label will stop working immediately.`))return;
-  try{const result=await api.rotateRadioQrToken(radioId);showQrLabel(radioId,result.token);showToast(`${radioId}: secure QR generated`);await loadData({quiet:true});}catch(err){showToast(humanError(err));}
+  if(!confirm(`Generate a new secure QR for ${radioId}? Any previous ${radioId} barcode label will stop working immediately.`))return;
+  try{const result=await api.rotateRadioQrToken(radioId);showBarcodeLabel(radioId,result.token);showToast(`${radioId}: secure barcode generated`);await loadData({quiet:true});}catch(err){showToast(humanError(err));}
 }
 async function generateAllQrLabels(){
-  if(!confirm('Generate new secure QR codes for ALL 40 radios? This immediately invalidates every previous radio QR label. Continue only when you are ready to print and install the complete new label set.'))return;
+  if(!confirm('Generate new secure barcodes for ALL 40 radios? This immediately invalidates every previous radio barcode label. Continue only when you are ready to print and install the complete new label set.'))return;
   const btn=$('#generateAllQrBtn');btn.disabled=true;btn.textContent='Generating 0 / 40…';const items=[];
   try{const results=await api.rotateAllRadioQrTokens();for(const result of results)items.push({radioId:result.radio_id,token:result.token});
-    const host=$('#qrBulkPrintArea');host.innerHTML='';for(const item of items){const cell=document.createElement('div');host.appendChild(cell);renderSecureQr(cell,item.radioId,item.token);}$('#qrBulkDialog').showModal();showToast('Secure label sheet generated. Print and install all labels.');await loadData({quiet:true});
+    const host=$('#qrBulkPrintArea');host.innerHTML='';for(const item of items){const cell=document.createElement('div');host.appendChild(cell);renderSecureBarcode(cell,item.radioId,item.token);}$('#qrBulkDialog').showModal();showToast('Secure label sheet generated. Print and install all labels.');await loadData({quiet:true});
   }catch(err){showToast(humanError(err));}finally{btn.disabled=false;btn.textContent='Generate / Rotate All 40 Labels';}
 }
 function openExceptionDialog(radioId,assignmentId){
@@ -238,7 +245,7 @@ async function beginEmployeeCheckout(){
 function renderEmployeeHome(){
   if(isManager(profile))return;const vm=getEmployeeWorkspace(state,profile);$('#employeeAvailableCount').textContent=vm.availableCount;
   const alert=$('#employeeReturnAlert'),banner=accountabilityBanner(accountabilityState);if(alert){alert.hidden=!banner;if(banner){alert.className=`employee-return-alert ${banner.tone==='danger'?'danger':''}`;alert.innerHTML=`<strong>${escapeHtml(banner.title)}</strong><span>${escapeHtml(banner.message)}</span>`;}}
-  if(vm.activeRadio){const shift=vm.activeRadio.shiftCode?`<br><strong>${escapeHtml(shiftLabel(vm.activeRadio.shiftCode))}</strong>`:'';$('#employeeMyRadio').innerHTML=`<p class="eyebrow light">Currently assigned</p><h3>${vm.activeRadio.id}</h3><p>Checked out ${fmt(vm.activeRadio.checkoutAt)}${shift}${vm.activeRadio.shiftEndAt?`<br>Return due ${fmt(vm.activeRadio.shiftEndAt)}`:vm.activeRadio.expectedReturnAt?` • Expected back ${fmt(vm.activeRadio.expectedReturnAt)}`:''}</p><span class="status-badge status-${vm.activeRadio.status}">${statusLabel(vm.activeRadio.status)}</span>`;$('#employeeCheckoutArea').hidden=true;$('#employeeReturnBtn').hidden=false;$('#employeeReturnBtn').dataset.id=vm.activeRadio.id;}else{$('#employeeMyRadio').innerHTML=`<p class="eyebrow light">My Radio</p><h3>No radio checked out</h3><p>Select your scheduled shift, pick up an available radio, and scan its secure QR code.</p>`;$('#employeeCheckoutArea').hidden=false;$('#employeeReturnBtn').hidden=true;$('#employeeScanBtn').disabled=!vm.canCheckout||!selectedShiftCode;}
+  if(vm.activeRadio){const shift=vm.activeRadio.shiftCode?`<br><strong>${escapeHtml(shiftLabel(vm.activeRadio.shiftCode))}</strong>`:'';$('#employeeMyRadio').innerHTML=`<p class="eyebrow light">Currently assigned</p><h3>${vm.activeRadio.id}</h3><p>Checked out ${fmt(vm.activeRadio.checkoutAt)}${shift}${vm.activeRadio.shiftEndAt?`<br>Return due ${fmt(vm.activeRadio.shiftEndAt)}`:vm.activeRadio.expectedReturnAt?` • Expected back ${fmt(vm.activeRadio.expectedReturnAt)}`:''}</p><span class="status-badge status-${vm.activeRadio.status}">${statusLabel(vm.activeRadio.status)}</span>`;$('#employeeCheckoutArea').hidden=true;$('#employeeReturnBtn').hidden=false;$('#employeeReturnBtn').dataset.id=vm.activeRadio.id;}else{$('#employeeMyRadio').innerHTML=`<p class="eyebrow light">My Radio</p><h3>No radio checked out</h3><p>Select your scheduled shift, pick up an available radio, and scan its secure barcode.</p>`;$('#employeeCheckoutArea').hidden=false;$('#employeeReturnBtn').hidden=true;$('#employeeScanBtn').disabled=!vm.canCheckout||!selectedShiftCode;}
   $('#employeeRecentHistory').innerHTML=vm.recentHistory.length?vm.recentHistory.map(h=>`<div class="employee-history-item"><div class="employee-history-radio">${h.radioId}</div><div><strong>${h.returnAt?'Returned':'Checked out'} ${h.radioId}</strong><span>${fmt(h.returnAt||h.checkoutAt)} • ${escapeHtml(h.department)}${h.shiftCode?` • ${escapeHtml(shiftLabel(h.shiftCode))}`:''}</span></div></div>`).join(''):'<div class="empty-state">No assignment history yet.</div>';
   renderDisciplinaryNotices();renderOperationalRead();
 }
@@ -298,31 +305,33 @@ $('#exceptionForm')?.addEventListener('submit',async e=>{e.preventDefault();cons
 $('#closeConditionDialog').addEventListener('click',closeConditionDialog);$('#conditionStatus').addEventListener('change',updateConditionReasonRequirement);$('#conditionForm').addEventListener('submit',async e=>{e.preventDefault();const id=$('#conditionDialog').dataset.radioId,status=$('#conditionStatus').value,reason=$('#conditionReason').value.trim();if(status!=='AVAILABLE'&&!reason){$('#conditionMessage').textContent='Enter a reason for this condition.';$('#conditionMessage').className='form-message error';return;}const ok=await mutate(()=>api.setRadioCondition(id,status,reason),`${id} condition updated to ${statusLabel(status)}`);if(ok)closeConditionDialog();});
 const legalCopy={privacy:`<p>Valet Radio HQ stores account identity, employee ID, department, radio assignments, timestamps, and protected operational audit events needed to run the workplace radio program.</p><p>Access is limited by employee and Manager roles. Do not enter sensitive personal information into radio condition notes or audit-related fields.</p><p>For questions about workplace data use, contact your manager.</p>`,terms:`<p>Valet Radio HQ is an internal workplace operations tool. Employees must use their own account, accurately check radios in and out, and complete required QR verification when returning assigned equipment.</p><p>Managers are responsible for account approvals, condition overrides, employee access, and appropriate use of operational records.</p><p>Use of the system is subject to your workplace policies.</p>`};function openLegal(kind){$('#legalDialogTitle').textContent=kind==='privacy'?'Privacy':'Terms of Use';$('#legalDialogContent').innerHTML=legalCopy[kind]||'';$('#legalDialog').showModal();}$('#closeLegalDialog').addEventListener('click',()=>$('#legalDialog').close());$$('[data-legal]').forEach(b=>b.addEventListener('click',()=>openLegal(b.dataset.legal)));
 
-// Legacy audit labels retained for regression compatibility: QR Verified Checkout; api.checkoutRadioVerified(id,expected)
-// Legacy audit label retained for regression compatibility: QR Verified Return
+// Legacy audit labels retained for regression compatibility: Barcode Verified Checkout; api.checkoutRadioVerified(id,expected)
+// Legacy audit label retained for regression compatibility: Barcode Verified Return
 const dialog=$('#scannerDialog'),video=$('#scannerVideo');
 function stopScanner(){if(scannerTimer)clearInterval(scannerTimer);scannerTimer=null;if(scannerStream){scannerStream.getTracks().forEach(t=>t.stop());scannerStream=null;}if(dialog.open)dialog.close();}
 async function openScanner(target,expectedRadioId=null){
   scannerTarget=target;const employeeReturn=target==='employeeReturn',employeeCheckout=target==='employeeCheckout',employeeScan=employeeReturn||employeeCheckout,report=target==='manager'?showMessage:employeeMessage,scannerMode=getScannerMode();
-  if(!scannerMode){const action=employeeReturn?'return':employeeCheckout?'check out':'select';report(employeeScan?`Camera QR scanning is required to ${action} your radio. Open Valet Radio HQ in Safari on iPhone/iPad or Chrome on Android and allow camera access.`:'Camera QR scanning is unavailable in this browser. Use the radio dropdown.','error');return;}
+  if(!scannerMode){const action=employeeReturn?'return':employeeCheckout?'check out':'select';report(employeeScan?`Camera barcode scanning is required to ${action} your radio. Open Valet Radio HQ in Safari on iPhone/iPad or Chrome on Android and allow camera access.`:'Camera barcode scanning is unavailable in this browser. Use the radio dropdown.','error');return;}
   if(employeeCheckout){const vm=getEmployeeWorkspace(state,profile);if(!vm.canCheckout){employeeMessage('Return your current radio before checking out another.','error');return;}if(!selectedShiftCode){employeeMessage('Select your scheduled shift before scanning a radio.','error');return;}}
   try{
-    dialog.showModal();$('#scannerStatus').textContent=employeeReturn?`Allow camera access and scan the secure QR code on ${expectedRadioId}.`:employeeCheckout?'Allow camera access and scan the secure QR code on the physical radio you are taking.':'Allow camera access, then point at the radio QR code.';
+    dialog.showModal();$('#scannerStatus').textContent=employeeReturn?`Allow camera access and scan the secure barcode on ${expectedRadioId}.`:employeeCheckout?'Allow camera access and scan the secure barcode on the physical radio you are taking.':'Allow camera access, then point at the radio barcode.';
     scannerStream=await navigator.mediaDevices.getUserMedia(getPreferredCameraConstraints());video.setAttribute('playsinline','');video.muted=true;video.srcObject=scannerStream;await video.play();
-    const detector=scannerMode==='native'?new BarcodeDetector({formats:['qr_code']}):null,scanCanvas=scannerMode==='jsqr'?document.createElement('canvas'):null;let scanBusy=false;
-    $('#scannerStatus').textContent=employeeReturn?`Scan ${expectedRadioId}'s secure QR code to confirm the return.`:employeeCheckout?'Scanning secure radio QR…':'Scanning…';
+    const detector=scannerMode==='native'?new BarcodeDetector({formats:['code_128']}):null,
+      scanCanvas=scannerMode==='zxing'?document.createElement('canvas'):null,
+      zxingReader=scannerMode==='zxing'?new ZXing.BrowserMultiFormatReader():null;let scanBusy=false;
+    $('#scannerStatus').textContent=employeeReturn?`Scan ${expectedRadioId}'s secure barcode to confirm the return.`:employeeCheckout?'Scanning secure radio barcode…':'Scanning…';
     scannerTimer=setInterval(async()=>{if(scanBusy)return;try{
-      let values=[];if(detector)values=(await detector.detect(video)).map(code=>code.rawValue);else{const value=decodeFrameWithJsQr(video,scanCanvas);if(value)values=[value];}
+      let values=[];if(detector)values=(await detector.detect(video)).map(code=>code.rawValue);else{const value=decodeFrameWithZxing(video,scanCanvas,zxingReader);if(value)values=[value];}
       for(const value of values){
         const raw=String(value||'').trim();if(!raw)continue;
-        if(employeeReturn){scanBusy=true;$('#scannerStatus').textContent='Secure QR read. Verifying assigned radio…';stopScanner();await mutate(()=>api.returnRadioSecure(raw),`${expectedRadioId} returned • Secure QR Verified`,{employee:true});return;}
-        if(employeeCheckout){scanBusy=true;$('#scannerStatus').textContent='Secure QR read. Verifying radio availability…';stopScanner();await mutate(()=>api.checkoutRadioSecure(raw,selectedShiftCode,getShiftWorkDate(selectedShiftCode,new Date())),`Radio checked out • ${shiftLabel(selectedShiftCode)} • Secure QR Verified`,{employee:true});return;}
+        if(employeeReturn){scanBusy=true;$('#scannerStatus').textContent='Secure Barcode read. Verifying assigned radio…';stopScanner();await mutate(()=>api.returnRadioSecure(raw),`${expectedRadioId} returned • Secure Barcode Verified`,{employee:true});return;}
+        if(employeeCheckout){scanBusy=true;$('#scannerStatus').textContent='Secure Barcode read. Verifying radio availability…';stopScanner();await mutate(()=>api.checkoutRadioSecure(raw,selectedShiftCode,getShiftWorkDate(selectedShiftCode,new Date())),`Radio checked out • ${shiftLabel(selectedShiftCode)} • Secure Barcode Verified`,{employee:true});return;}
         const id=parseRadioCode(raw);if(!id)continue;const select=$('#radioSelect'),opt=[...select.options].find(o=>o.value===id);if(opt){select.value=id;updateSelectedVisual();$('#scannerStatus').textContent=`Found ${id}`;setTimeout(stopScanner,450);return;}$('#scannerStatus').textContent=`${id} is not eligible for this action.`;
       }
     }catch(err){if(employeeScan){scanBusy=false;$('#scannerStatus').textContent=humanError(err);}}},300);
   }catch(err){stopScanner();const message=cameraErrorMessage(err);report(employeeScan?message:'Camera access was unavailable. '+message,'error');}
 }
-$('#closeScanner').addEventListener('click',stopScanner);$('#scanSupport').textContent=canUseCameraQrScanner()?'Camera QR scanning is available in this browser.':'Camera QR scanning may be unavailable here. Employee checkout and return require a supported camera browser.';$('#scanBtn').addEventListener('click',()=>openScanner('manager'));$('#employeeScanBtn').addEventListener('click',beginEmployeeCheckout);
+$('#closeScanner').addEventListener('click',stopScanner);$('#scanSupport').textContent=canUseCameraQrScanner()?'Camera barcode scanning is available in this browser.':'Camera barcode scanning may be unavailable here. Employee checkout and return require a supported camera browser.';$('#scanBtn').addEventListener('click',()=>openScanner('manager'));$('#employeeScanBtn').addEventListener('click',beginEmployeeCheckout);
 
 let deferredInstallPrompt=null;
 function isStandaloneMode(){return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone===true;}

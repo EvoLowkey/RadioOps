@@ -13,11 +13,11 @@ test('employee checkout is scan-only with no manual radio selector',()=>{
   assert.match(html,/Scan Radio to Check Out/);
 });
 
-test('employee QR checkout calls verified checkout RPC directly from scanner',()=>{
-  assert.match(api,/checkoutRadioVerified/);
-  assert.match(api,/checkout_radio_verified/);
-  assert.match(app,/QR Verified Checkout/);
-  assert.match(app,/api\.checkoutRadioVerified\(id,expected\)/);
+test('employee barcode checkout uses secure token RPC directly from scanner',()=>{
+  assert.match(api,/checkoutRadioSecure/);
+  assert.match(api,/checkout_radio_secure/);
+  assert.match(app,/Barcode Verified/);
+  assert.match(app,/api\.checkoutRadioSecure\(raw,selectedShiftCode/);
 });
 
 test('verified checkout migration preserves manager checkout and requires employee QR path',()=>{

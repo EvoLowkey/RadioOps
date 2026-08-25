@@ -8,12 +8,12 @@ export function parseRadioCode(value){
 
 export function getScannerMode({
   hasBarcodeDetector=typeof globalThis.BarcodeDetector!=='undefined',
-  hasJsQr=typeof globalThis.jsQR==='function',
+  hasZxing=Boolean(globalThis.ZXing?.BrowserMultiFormatReader),
   hasGetUserMedia=Boolean(globalThis.navigator?.mediaDevices?.getUserMedia)
 }={}){
   if(!hasGetUserMedia) return null;
   if(hasBarcodeDetector) return 'native';
-  if(hasJsQr) return 'jsqr';
+  if(hasZxing) return 'zxing';
   return null;
 }
 
@@ -52,4 +52,18 @@ export function decodeFrameWithJsQr(video, canvas, decoder=globalThis.jsQR){
   const image=ctx.getImageData(0,0,width,height);
   const result=decoder(image.data,width,height,{inversionAttempts:'dontInvert'});
   return result?.data??null;
+}
+
+export function decodeFrameWithZxing(video, canvas, reader){
+  if(!reader||!video||!canvas||video.readyState<2) return null;
+  const width=video.videoWidth||0, height=video.videoHeight||0;
+  if(!width||!height) return null;
+  canvas.width=width; canvas.height=height;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  if(!ctx) return null;
+  ctx.drawImage(video,0,0,width,height);
+  try{
+    const result=reader.decodeFromCanvas(canvas);
+    return result?.getText?.() ?? result?.text ?? null;
+  }catch{return null;}
 }

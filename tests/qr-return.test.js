@@ -17,9 +17,9 @@ test('employee return UI requires QR verification and exposes camera permission 
   const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
   const app=fs.readFileSync(new URL('../src/app.js',import.meta.url),'utf8');
   assert.match(html,/employeeReturnBtn/);
-  assert.match(html,/Scan QR to Return/);
+  assert.match(html,/Scan Barcode to Return/);
   assert.match(app,/employeeReturn/);
-  assert.match(app,/QR Verified Return/);
+  assert.match(app,/Barcode Verified Return/);
   assert.doesNotMatch(app,/employeeReturnBtn[^\n]+api\.returnRadio\(id\)/);
 });
 

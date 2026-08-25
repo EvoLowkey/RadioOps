@@ -131,10 +131,10 @@
                   <button id="shiftPM" class="shift-choice" type="button" data-shift="PM"><b>PM Shift</b><span>3:00 PM – 11:00 PM</span></button>
                   <button id="shiftOvernight" class="shift-choice" type="button" data-shift="OVERNIGHT"><b>Overnight Shift</b><span>11:00 PM – 7:00 AM</span></button>
                 </div></div>
-                <div class="scan-required-card"><strong>Physical radio scan required</strong><span>Pick up the radio you are taking, then scan its secure QR code. Manual radio selection is disabled for employees.</span></div>
+                <div class="scan-required-card"><strong>Physical radio scan required</strong><span>Pick up the radio you are taking, then scan its secure barcode. Manual radio selection is disabled for employees.</span></div>
                 <button id="employeeScanBtn" class="primary-btn employee-scan-checkout-btn" type="button" disabled>Scan Radio to Check Out</button>
               </div>
-              <button id="employeeReturnBtn" class="primary-btn employee-return-btn" type="button" hidden>Scan QR to Return</button>
+              <button id="employeeReturnBtn" class="primary-btn employee-return-btn" type="button" hidden>Scan Barcode to Return</button>
               <div id="employeeReturnAlert" class="employee-return-alert" role="status" aria-live="assertive" hidden></div><div id="employeeActionMessage" class="form-message" role="status" aria-live="polite"></div>
             </div>
             <aside class="card employee-history-card"><p class="section-kicker">My recent activity</p><h3>Last 5 assignments</h3><div id="employeeRecentHistory" class="employee-history-list"></div></aside>
@@ -263,7 +263,7 @@
         <section id="checkout" class="view">
           <div class="page-heading">
             <div><p class="eyebrow">Radio handoff</p><h2>Check Out / Return</h2><p>One clean workflow for every employee and every radio.</p></div>
-            <div class="page-chip">QR + manual selection</div>
+            <div class="page-chip">Barcode + manual selection</div>
           </div>
 
           <div class="checkout-layout">
@@ -279,11 +279,11 @@
                 </div>
 
                 <div class="radio-select-zone">
-                  <div class="selection-copy"><span class="step-badge">2</span><div><strong>Select radio</strong><small>Scan the asset QR code or choose manually.</small></div></div>
+                  <div class="selection-copy"><span class="step-badge">2</span><div><strong>Select radio</strong><small>Scan the asset barcode or choose manually.</small></div></div>
                   <label class="field"><span>Radio</span><select id="radioSelect"></select></label>
                   <div class="scan-card">
-                    <div class="qr-display"><span class="qr-pattern">▦</span><strong id="qrSelectedLabel">WT-01</strong><small>Asset QR</small></div>
-                    <div class="scan-copy"><strong>Camera scan</strong><p id="scanSupport">Camera scanning is available for Managers. Employee checkout and return require a secure radio QR scan.</p><button type="button" id="scanBtn" class="secondary-btn">Open QR scanner</button></div>
+                    <div class="qr-display"><span class="qr-pattern">▦</span><strong id="qrSelectedLabel">WT-01</strong><small>Asset Barcode</small></div>
+                    <div class="scan-copy"><strong>Camera scan</strong><p id="scanSupport">Camera scanning is available for Managers. Employee checkout and return require a secure radio Barcode scan.</p><button type="button" id="scanBtn" class="secondary-btn">Open Barcode scanner</button></div>
                   </div>
                 </div>
 
@@ -298,11 +298,11 @@
                   <div class="radio-device"><div class="antenna"></div><div class="screen"><span>POC</span><small>4G READY</small></div><div class="speaker"></div><div class="radio-label" id="heroRadioId">WT-01</div></div>
                 </div>
                 <div class="profile-copy"><p class="section-kicker">Selected asset</p><h3>POC-1 Lite</h3><p>Each radio keeps a permanent WT asset number and a dedicated charging slot.</p></div>
-                <div class="mini-facts"><div><strong>40</strong><span>Fleet size</span></div><div><strong>2</strong><span>Dock banks</span></div><div><strong>QR</strong><span>Asset scan</span></div></div>
+                <div class="mini-facts"><div><strong>40</strong><span>Fleet size</span></div><div><strong>2</strong><span>Dock banks</span></div><div><strong>Barcode</strong><span>Asset scan</span></div></div>
               </div>
               <div class="process-card">
                 <div><span>01</span><p><strong>Identify employee</strong><small>Name, ID and department</small></p></div>
-                <div><span>02</span><p><strong>Scan radio</strong><small>Secure QR checkout</small></p></div>
+                <div><span>02</span><p><strong>Scan radio</strong><small>Secure Barcode checkout</small></p></div>
                 <div><span>03</span><p><strong>Confirm handoff</strong><small>Timestamp saved automatically</small></p></div>
               </div>
             </div>
@@ -334,8 +334,8 @@
         </section>
 
         <section id="accountabilityAdmin" class="view manager-only">
-          <div class="page-heading"><div><p class="eyebrow">Secure accountability</p><h2>QR Labels &amp; Incident Management</h2><p>Manage secure radio identities, return exceptions, and corrective-action records.</p></div><div class="page-chip">Manager only</div></div>
-          <div class="card"><div class="card-header responsive-row"><div><p class="section-kicker">Secure QR identities</p><h3>Radio Labels WT-01–WT-40</h3><p>Regenerating a QR immediately invalidates the previous label.</p></div><button id="generateAllQrBtn" class="primary-btn" type="button">Generate / Rotate All 40 Labels</button></div><div id="qrAdminRows" class="qr-admin-grid"></div></div>
+          <div class="page-heading"><div><p class="eyebrow">Secure accountability</p><h2>Barcode Labels &amp; Incident Management</h2><p>Manage secure radio identities, return exceptions, and corrective-action records.</p></div><div class="page-chip">Manager only</div></div>
+          <div class="card"><div class="card-header responsive-row"><div><p class="section-kicker">Secure Barcode identities</p><h3>Radio Labels WT-01–WT-40</h3><p>Regenerating a Barcode immediately invalidates the previous label.</p></div><button id="generateAllQrBtn" class="primary-btn" type="button">Generate / Rotate All 40 Labels</button></div><div id="qrAdminRows" class="qr-admin-grid"></div></div>
           <div class="card"><div class="card-header"><div><p class="section-kicker">Exceptions</p><h3>Recent Radio Incidents</h3></div></div><div id="managerIncidentRows" class="employee-history-list"></div></div>
           <div class="card"><div class="card-header"><div><p class="section-kicker">Corrective action</p><h3>Warnings &amp; Write-Ups</h3></div></div><div id="managerDisciplineRows" class="employee-history-list"></div></div>
         </section>
@@ -353,14 +353,14 @@
           <div class="help-grid">
             <div class="card help-card">
               <p class="section-kicker">Employee Help</p><h3>Using your radio</h3>
-              <ol class="help-steps"><li><strong>Account access</strong><span>Verify your email, sign in, and wait for Manager approval when joining.</span></li><li><strong>Check out</strong><span>Select your scheduled shift, accept the equipment agreement on first use, then scan the secure QR code on the physical radio you are taking.</span></li><li><strong>Return</strong><span>Tap Scan QR to Return and scan the exact radio assigned to you. Camera access is required.</span></li><li><strong>Password</strong><span>Use Forgot password? on the sign-in page if you cannot remember your password.</span></li><li><strong>Camera</strong><span>Use Safari on iPhone/iPad or Chrome on Android and allow camera access when prompted.</span></li></ol>
+              <ol class="help-steps"><li><strong>Account access</strong><span>Verify your email, sign in, and wait for Manager approval when joining.</span></li><li><strong>Check out</strong><span>Select your scheduled shift, accept the equipment agreement on first use, then scan the secure barcode on the physical radio you are taking.</span></li><li><strong>Return</strong><span>Tap Scan Barcode to Return and scan the exact radio assigned to you. Camera access is required.</span></li><li><strong>Password</strong><span>Use Forgot password? on the sign-in page if you cannot remember your password.</span></li><li><strong>Camera</strong><span>Use Safari on iPhone/iPad or Chrome on Android and allow camera access when prompted.</span></li></ol>
             </div>
             <div class="card help-card manager-only">
               <p class="section-kicker">Manager Help</p><h3>Managing the operation</h3>
-              <ol class="help-steps"><li><strong>Employees</strong><span>Approve new accounts, disable access, promote Managers, or remove former employees.</span></li><li><strong>Radio condition</strong><span>Open a radio and mark it Lost, Damaged, In Repair, or Available with a reason.</span></li><li><strong>Lost radios</strong><span>A Lost radio can retain its open assignment so accountability stays connected to the last employee.</span></li><li><strong>Overrides</strong><span>Use Manager return controls when a QR label is damaged or operational recovery is required.</span></li><li><strong>Audit</strong><span>Review protected system events for account and fleet changes.</span></li></ol>
+              <ol class="help-steps"><li><strong>Employees</strong><span>Approve new accounts, disable access, promote Managers, or remove former employees.</span></li><li><strong>Radio condition</strong><span>Open a radio and mark it Lost, Damaged, In Repair, or Available with a reason.</span></li><li><strong>Lost radios</strong><span>A Lost radio can retain its open assignment so accountability stays connected to the last employee.</span></li><li><strong>Overrides</strong><span>Use Manager return controls when a Barcode label is damaged or operational recovery is required.</span></li><li><strong>Audit</strong><span>Review protected system events for account and fleet changes.</span></li></ol>
             </div>
             <div class="card help-card">
-              <p class="section-kicker">Support</p><h3>Need assistance?</h3><p class="help-copy">Contact your manager for assistance. Do not share passwords, verification codes, or QR-return credentials with anyone.</p>
+              <p class="section-kicker">Support</p><h3>Need assistance?</h3><p class="help-copy">Contact your manager for assistance. Do not share passwords, verification codes, or Barcode-return credentials with anyone.</p>
               <div class="support-notice"><strong>Valet Radio HQ</strong><span>Professional Valet Radio Management</span><span>www.valetopshq.com</span></div>
             </div>
             <div class="card help-card manager-only">
@@ -396,7 +396,7 @@
 
   <dialog id="qrLabelDialog" class="legal-dialog qr-label-dialog">
     <div class="dialog-head"><div><p class="section-kicker light">Secure radio label</p><h3 id="qrLabelTitle">WT-01</h3></div><button id="closeQrLabelDialog" class="icon-btn" type="button">×</button></div>
-    <div class="legal-content"><div id="qrPrintArea" class="qr-print-area"></div><p class="condition-note">The QR contains a random secure identifier. Do not post the token text separately.</p><button id="printQrLabelBtn" class="primary-btn" type="button">Print Label</button></div>
+    <div class="legal-content"><div id="qrPrintArea" class="qr-print-area"></div><p class="condition-note">The Barcode contains a random secure identifier. Do not post the token text separately.</p><button id="printQrLabelBtn" class="primary-btn" type="button">Print Label</button></div>
   </dialog>
 
   <dialog id="qrBulkDialog" class="legal-dialog qr-bulk-dialog">
@@ -416,16 +416,16 @@
   </dialog>
 
   <dialog id="scannerDialog">
-    <div class="dialog-head"><div><p class="section-kicker light">Asset scanner</p><h3>Scan Radio QR</h3></div><button id="closeScanner" class="icon-btn">×</button></div>
+    <div class="dialog-head"><div><p class="section-kicker light">Asset scanner</p><h3>Scan Radio Barcode</h3></div><button id="closeScanner" class="icon-btn">×</button></div>
     <div class="scanner-frame"><video id="scannerVideo" playsinline muted></video><div class="scan-reticle"></div></div>
-    <p id="scannerStatus">Allow camera access, then point the camera at the radio QR code.</p>
+    <p id="scannerStatus">Allow camera access, then point the camera at the radio barcode.</p>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="/api/runtime-config"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js" crossorigin="anonymous"></script>
   <script type="module" src="src/app.js"></script>
 </body>
 </html>

@@ -110,9 +110,9 @@ declare token text; rid text:=upper(trim(p_radio_id)); gen integer;
 begin
   if not public.is_manager_uid(auth.uid()) then raise exception 'Permission denied: manager required'; end if;
   if not exists(select 1 from public.radios where id=rid) then raise exception 'Unknown radio'; end if;
-  token:=encode(gen_random_bytes(32),'hex');
+  token:=encode(extensions.gen_random_bytes(32),'hex');
   insert into public.radio_qr_credentials(radio_id,token_digest,generation,rotated_by)
-  values(rid,digest(token,'sha256'),1,auth.uid())
+  values(rid,extensions.digest(token,'sha256'),1,auth.uid())
   on conflict(radio_id) do update set token_digest=excluded.token_digest,generation=public.radio_qr_credentials.generation+1,rotated_at=now(),rotated_by=auth.uid()
   returning generation into gen;
   insert into public.audit_events(actor_profile_id,event_type,radio_id,metadata) values(auth.uid(),'RADIO_QR_ROTATED',rid,jsonb_build_object('generation',gen));
@@ -125,9 +125,9 @@ declare r record; token text; gen integer; items jsonb:='[]'::jsonb;
 begin
   if not public.is_manager_uid(auth.uid()) then raise exception 'Permission denied: manager required'; end if;
   for r in select id from public.radios order by asset_number loop
-    token:=encode(gen_random_bytes(32),'hex');
+    token:=encode(extensions.gen_random_bytes(32),'hex');
     insert into public.radio_qr_credentials(radio_id,token_digest,generation,rotated_by)
-    values(r.id,digest(token,'sha256'),1,auth.uid())
+    values(r.id,extensions.digest(token,'sha256'),1,auth.uid())
     on conflict(radio_id) do update set token_digest=excluded.token_digest,generation=public.radio_qr_credentials.generation+1,rotated_at=now(),rotated_by=auth.uid()
     returning generation into gen;
     insert into public.audit_events(actor_profile_id,event_type,radio_id,metadata)
@@ -147,7 +147,7 @@ begin
   if not exists(select 1 from public.equipment_agreement_acceptances where profile_id=caller.id and agreement_version=current_ver) then raise exception 'Equipment agreement acceptance required'; end if;
   if p_shift_code not in ('AM','PM','OVERNIGHT') then raise exception 'Invalid shift'; end if;
   if exists(select 1 from public.assignments where profile_id=caller.id and return_at is null) then raise exception 'Employee already has a checked out radio'; end if;
-  select q.radio_id into rid from public.radio_qr_credentials q where q.token_digest=digest(trim(p_token),'sha256');
+  select q.radio_id into rid from public.radio_qr_credentials q where q.token_digest=extensions.digest(trim(p_token),'sha256');
   if rid is null then raise exception 'Invalid or expired radio QR code'; end if;
   select * into r from public.radios where id=rid for update;
   if r.status <> 'AVAILABLE' then raise exception 'Radio is no longer available'; end if;
@@ -168,7 +168,7 @@ declare caller public.profiles%rowtype; rid text; a public.assignments%rowtype; 
 begin
   select * into caller from public.profiles where id=auth.uid() and is_active=true and approval_status='ACTIVE';
   if not found then raise exception 'Active approved profile required'; end if;
-  select radio_id into rid from public.radio_qr_credentials where token_digest=digest(trim(p_token),'sha256');
+  select radio_id into rid from public.radio_qr_credentials where token_digest=extensions.digest(trim(p_token),'sha256');
   if rid is null then raise exception 'Invalid or expired radio QR code'; end if;
   select * into a from public.assignments where profile_id=caller.id and return_at is null for update;
   if not found then raise exception 'No open radio assignment'; end if;
