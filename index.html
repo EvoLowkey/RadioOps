@@ -396,12 +396,12 @@
 
   <dialog id="qrLabelDialog" class="legal-dialog qr-label-dialog">
     <div class="dialog-head"><div><p class="section-kicker light">Secure radio label</p><h3 id="qrLabelTitle">WT-01</h3></div><button id="closeQrLabelDialog" class="icon-btn" type="button">×</button></div>
-    <div class="legal-content"><div id="qrPrintArea" class="qr-print-area"></div><p class="condition-note">The barcode contains a random secure identifier. Download the DYMO 30336 .label file, then open it in DYMO Label Software.</p><button id="downloadDymoLabelBtn" class="primary-btn" type="button">Download DYMO Label</button></div>
+    <div class="legal-content"><div id="qrPrintArea" class="qr-print-area"></div><p class="condition-note">The barcode contains a random secure identifier. Download the DYMO 30336 .label file, then open it in DYMO Label Software.</p><div class="dialog-actions"><button id="printDymoDirectBtn" class="primary-btn" type="button">Print DYMO Label</button><button id="downloadDymoLabelBtn" class="secondary-btn" type="button">Download .label</button></div><div id="dymoDirectStatus" class="form-message" role="status"></div></div>
   </dialog>
 
   <dialog id="qrBulkDialog" class="legal-dialog qr-bulk-dialog">
     <div class="dialog-head"><div><p class="section-kicker light">Secure label sheet</p><h3>WT-01–WT-40</h3></div><button id="closeQrBulkDialog" class="icon-btn" type="button">×</button></div>
-    <div class="legal-content"><div id="qrBulkPrintArea" class="qr-bulk-grid"></div><button id="downloadAllDymoBtn" class="primary-btn" type="button">Download All DYMO Labels</button></div>
+    <div class="legal-content"><div id="qrBulkPrintArea" class="qr-bulk-grid"></div><div class="dialog-actions"><button id="printAllDymoDirectBtn" class="primary-btn" type="button">Print All 40 DYMO Labels</button><button id="downloadAllDymoBtn" class="secondary-btn" type="button">Download All .label Files</button></div><div id="dymoBulkStatus" class="form-message" role="status"></div></div>
   </dialog>
 
 
@@ -437,6 +437,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" crossorigin="anonymous"></script>
+  <script src="https://labelwriter.com/software/dls/sdk/js/DYMO.Label.Framework.latest.js"></script>
   <script type="module" src="src/app.js"></script>
 </body>
 </html>
