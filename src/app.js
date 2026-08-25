@@ -4,6 +4,7 @@ import { isManager, getAccountGate, canViewOperationalRadioData } from './permis
 import { localDateString, operationalRoleLabel, accountabilityBanner, shouldNotifyAccountability } from './accountability.js';
 import { getShiftWorkDate } from './shift-policy.js';
 import { buildDymo30336Label, dymoFilename } from './dymo-label.js';
+import { getDymoPrinter, printDymoXml } from './dymo-print.js';
 import { parseRadioCode, canUseCameraQrScanner, getScannerMode, matchesAssignedRadio, getPreferredCameraConstraints, cameraErrorMessage, decodeFrameWithJsQr, decodeFrameWithZxing } from './scanner.js';
 import {
   filterRadios, sortHistoryNewestFirst, getDockBank, getRecentActivity,
@@ -26,6 +27,7 @@ let selectedShiftCode=null,currentAgreement=null,accountabilityState=null,operat
 let managerIncidents=[],managerDiscipline=[],qrStatus=[];
 let currentDymoLabel=null;
 let pendingDymoDownload=null;
+let currentBulkDymoItems=[];
 const DYMO_PROMPT_KEY='vrhqDymoPromptDismissed';
 
 function updateClock(){if($('#systemTime'))$('#systemTime').textContent=new Intl.DateTimeFormat(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date());}
@@ -202,6 +204,27 @@ async function downloadAllDymoLabels(items){
   const blob=await zip.generateAsync({type:'blob'});
   downloadBlob('Valet-Radio-HQ-WT-01-to-WT-40-DYMO-30336-Labels.zip',blob,'application/zip');
 }
+function dymoFramework(){
+  return globalThis.dymo?.label?.framework||null;
+}
+async function directPrintOne(item){
+  const framework=dymoFramework();
+  const printer=await getDymoPrinter(framework);
+  printDymoXml(framework,buildDymo30336Label(item.radioId,item.token),printer);
+  return printer.name;
+}
+async function directPrintAll(items){
+  const framework=dymoFramework();
+  const printer=await getDymoPrinter(framework);
+  const status=$('#dymoBulkStatus');
+  for(let i=0;i<items.length;i++){
+    status.textContent=`Printing ${i+1} / ${items.length} — ${items[i].radioId}`;
+    printDymoXml(framework,buildDymo30336Label(items[i].radioId,items[i].token),printer);
+    await new Promise(resolve=>setTimeout(resolve,75));
+  }
+  status.textContent=`Printed ${items.length} labels to ${printer.name}.`;
+  return printer.name;
+}
 function renderSecureBarcode(container,radioId,token){
   container.innerHTML='';
   const card=document.createElement('div');
@@ -223,10 +246,9 @@ async function generateAllQrLabels(){
   try{
     const results=await api.rotateAllRadioQrTokens();
     const items=results.map(result=>({radioId:result.radio_id,token:result.token}));
-    showDymoSoftwarePrompt(async()=>{
-      await downloadAllDymoLabels(items);
-      showToast('40 DYMO .label files downloaded as one ZIP.');
-    },{bulk:true});
+    currentBulkDymoItems=items;
+    $('#dymoBulkStatus').textContent='40 secure labels are ready for direct printing or .label download.';
+    $('#qrBulkDialog').showModal();
     await loadData({quiet:true});
   }catch(err){showToast(humanError(err));}
   finally{btn.disabled=false;btn.textContent='Download All DYMO Labels';}
@@ -340,6 +362,17 @@ $('#qrAdminRows')?.addEventListener('click',e=>{const b=e.target.closest('[data-
 $('#generateAllQrBtn')?.addEventListener('click',generateAllQrLabels);
 $('#closeQrLabelDialog')?.addEventListener('click',()=>{$('#qrPrintArea').innerHTML='';$('#qrLabelDialog').close();});
 $('#closeQrBulkDialog')?.addEventListener('click',()=>{$('#qrBulkPrintArea').innerHTML='';$('#qrBulkDialog').close();});
+$('#printDymoDirectBtn')?.addEventListener('click',async()=>{
+  if(!currentDymoLabel)return;
+  const status=$('#dymoDirectStatus');status.textContent='Checking DYMO Label Web Service…';
+  try{const printer=await directPrintOne(currentDymoLabel);status.textContent=`${currentDymoLabel.radioId} sent to ${printer}.`;showToast(`${currentDymoLabel.radioId} sent to DYMO LabelWriter`);}
+  catch(err){status.textContent=`${humanError(err)} Use Download .label as a fallback.`;status.className='form-message error';}
+});
+$('#printAllDymoDirectBtn')?.addEventListener('click',async()=>{
+  if(!currentBulkDymoItems.length)return;
+  try{const printer=await directPrintAll(currentBulkDymoItems);showToast(`40 labels sent to ${printer}`);}
+  catch(err){$('#dymoBulkStatus').textContent=`${humanError(err)} Download the .label ZIP as a fallback.`;$('#dymoBulkStatus').className='form-message error';}
+});
 $('#downloadDymoLabelBtn')?.addEventListener('click',()=>{
   if(!currentDymoLabel)return;
   const item={...currentDymoLabel};
@@ -348,7 +381,11 @@ $('#downloadDymoLabelBtn')?.addEventListener('click',()=>{
     showToast(`${item.radioId}: DYMO label downloaded`);
   });
 });
-$('#downloadAllDymoBtn')?.addEventListener('click',generateAllQrLabels);
+$('#downloadAllDymoBtn')?.addEventListener('click',async()=>{
+  if(!currentBulkDymoItems.length)return;
+  await downloadAllDymoLabels(currentBulkDymoItems);
+  showToast('40 DYMO .label files downloaded as one ZIP.');
+});
 $('#closeDymoSoftwareDialog')?.addEventListener('click',()=>{pendingDymoDownload=null;$('#dymoSoftwareDialog').close();});
 $('#cancelDymoDownloadBtn')?.addEventListener('click',()=>{pendingDymoDownload=null;$('#dymoSoftwareDialog').close();});
 $('#confirmDymoDownloadBtn')?.addEventListener('click',async()=>{
