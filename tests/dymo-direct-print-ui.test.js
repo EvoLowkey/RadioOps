@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const html=fs.readFileSync('index.html','utf8'), app=fs.readFileSync('src/app.js','utf8');
 test('loads DYMO Label Framework and exposes direct print with download fallback',()=>{
- assert.match(html,/DYMO\.Label\.Framework/i);
+ assert.match(html,/dymo\.connect\.framework\.js/i);
  assert.match(html,/id="printDymoDirectBtn"/);
  assert.match(html,/Print DYMO Label/i);
  assert.match(html,/id="downloadDymoLabelBtn"/);
