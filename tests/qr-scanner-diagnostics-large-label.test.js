@@ -8,7 +8,7 @@ const html=fs.readFileSync('index.html','utf8');
 test('30336 QR uses a substantially larger centered square',()=>{
  const xml=buildDymo30336Label('WT-01','TEST-TOKEN');
  assert.match(xml,/<Type>QRCode<\/Type>/);
- assert.match(xml,/<Bounds X="780" Y="130" Width="1500" Height="1500" \/>/);
+ assert.match(xml,/<Bounds X="730" Y="100" Width="1600" Height="1600" \/>/);
 });
 test('scanner exposes diagnostic stages',()=>{
  for(const stage of ['Camera ready','QR decoder loaded','Scanning frames','QR detected — verifying radio']) assert.match(app,new RegExp(stage));
