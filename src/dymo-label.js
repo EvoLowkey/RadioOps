@@ -51,10 +51,10 @@ export function buildDymo30336Label(radioId,token){
     <BarcodeObject>
       <Name>SECURE_QR</Name><ForeColor Alpha="255" Red="0" Green="0" Blue="0" /><BackColor Alpha="255" Red="255" Green="255" Blue="255" />
       <LinkedObjectName></LinkedObjectName><Rotation>Rotation0</Rotation><IsMirrored>False</IsMirrored><IsVariable>True</IsVariable><GroupID>-1</GroupID><IsOutlined>False</IsOutlined>
-      <Text>${t}</Text><Type>QRCode</Type><Size>Small</Size><TextPosition>None</TextPosition>
+      <Text>${t}</Text><Type>QRCode</Type><Size>Large</Size><TextPosition>None</TextPosition>
       <TextFont Family="Arial" Size="6" Bold="False" Italic="False" Underline="False" Strikeout="False" /><CheckSumFont Family="Arial" Size="6" Bold="False" Italic="False" Underline="False" Strikeout="False" />
       <TextEmbedding>None</TextEmbedding><ECLevel>0</ECLevel><HorizontalAlignment>Center</HorizontalAlignment><QuietZonesPadding Left="0" Top="0" Right="0" Bottom="0" />
-    </BarcodeObject><Bounds X="780" Y="130" Width="1500" Height="1500" />
+    </BarcodeObject><Bounds X="730" Y="100" Width="1600" Height="1600" />
   </ObjectInfo>
   <ObjectInfo>
     <TextObject>
