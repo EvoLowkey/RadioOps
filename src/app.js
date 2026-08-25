@@ -389,6 +389,64 @@ async function startZxingContinuousScan(video,onValue,onError){
 function setScannerDiagnostic(stage){
   const el=$('#scannerDiagnostic');if(el)el.textContent=stage;
 }
+
+// DIAGNOSTIC_QR_TEST_BEGIN
+async function runJsQrDiagnosticScanner(){
+  const dialog=$('#scannerDialog'),video=$('#scannerVideo');
+  if(typeof globalThis.jsQR!=='function'){
+    employeeMessage('Diagnostic QR decoder did not load.','error');
+    return;
+  }
+  if(!navigator.mediaDevices?.getUserMedia){
+    employeeMessage('Camera access is unavailable in this browser.','error');
+    return;
+  }
+
+  try{
+    dialog.showModal();
+    $('#scannerStatus').textContent='Diagnostic mode: center the plain WT-01 QR code in the box.';
+    $('#scannerDiagnostic').textContent='QR decoder loaded — jsQR only';
+    $('#diagnosticFrameCount').textContent='Frames analyzed: 0';
+    $('#diagnosticQrResult').innerHTML='<strong>QR READ:</strong> nothing yet';
+
+    scannerStream=await navigator.mediaDevices.getUserMedia(getPreferredCameraConstraints());
+    video.setAttribute('playsinline','');
+    video.muted=true;
+    video.srcObject=scannerStream;
+    await video.play();
+    $('#scannerDiagnostic').textContent='Camera ready — scanning frames with jsQR';
+
+    const canvas=document.createElement('canvas');
+    let frames=0,found=false;
+    scannerTimer=setInterval(()=>{
+      if(found||!scannerStream||video.readyState<2)return;
+      const width=video.videoWidth||0,height=video.videoHeight||0;
+      if(!width||!height)return;
+
+      canvas.width=width;canvas.height=height;
+      const ctx=canvas.getContext('2d',{willReadFrequently:true});
+      if(!ctx)return;
+      ctx.drawImage(video,0,0,width,height);
+      const image=ctx.getImageData(0,0,width,height);
+      frames+=1;
+      $('#diagnosticFrameCount').textContent=`Frames analyzed: ${frames}`;
+
+      const result=globalThis.jsQR(image.data,width,height,{inversionAttempts:'attemptBoth'});
+      if(result?.data){
+        found=true;
+        const text=String(result.data).trim();
+        $('#diagnosticQrResult').innerHTML=`<strong>QR READ:</strong> ${escapeHtml(text)}`;
+        $('#scannerStatus').textContent=`QR READ: ${text}`;
+        $('#scannerDiagnostic').textContent='QR decoded successfully with jsQR';
+      }
+    },180);
+  }catch(err){
+    stopScanner();
+    employeeMessage(cameraErrorMessage(err),'error');
+  }
+}
+// DIAGNOSTIC_QR_TEST_END
+
 async function openScanner(target,expectedRadioId=null){
   scannerTarget=target;
   const employeeReturn=target==='employeeReturn',employeeCheckout=target==='employeeCheckout',employeeScan=employeeReturn||employeeCheckout,report=target==='manager'?showMessage:employeeMessage;
@@ -467,7 +525,7 @@ async function openScanner(target,expectedRadioId=null){
     },300);
   }catch(err){stopScanner();const message=cameraErrorMessage(err);report(employeeScan?message:'Camera access was unavailable. '+message,'error');}
 }
-$('#closeScanner').addEventListener('click',stopScanner);$('#scanSupport').textContent=canUseCameraQrScanner()?'Camera QR code scanning is available in this browser.':'Camera QR code scanning may be unavailable here. Employee checkout and return require a supported camera browser.';$('#scanBtn').addEventListener('click',()=>openScanner('manager'));$('#employeeScanBtn').addEventListener('click',beginEmployeeCheckout);
+$('#closeScanner').addEventListener('click',stopScanner);$('#scanSupport').textContent=canUseCameraQrScanner()?'Camera QR code scanning is available in this browser.':'Camera QR code scanning may be unavailable here. Employee checkout and return require a supported camera browser.';$('#scanBtn').addEventListener('click',()=>openScanner('manager'));$('#employeeScanBtn').addEventListener('click',runJsQrDiagnosticScanner);
 
 let deferredInstallPrompt=null;
 function isStandaloneMode(){return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone===true;}
