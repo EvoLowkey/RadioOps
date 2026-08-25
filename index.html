@@ -132,7 +132,7 @@
                   <button id="shiftOvernight" class="shift-choice" type="button" data-shift="OVERNIGHT"><b>Overnight Shift</b><span>11:00 PM – 7:00 AM</span></button>
                 </div></div>
                 <div class="scan-required-card"><strong>Physical radio scan required</strong><span>Pick up the radio you are taking, then scan its secure QR. Manual radio selection is disabled for employees.</span></div>
-                <button id="employeeScanBtn" class="primary-btn employee-scan-checkout-btn" type="button" disabled>Scan Radio to Check Out</button>
+                <button id="employeeScanBtn" data-diagnostic-qr="true" class="primary-btn employee-scan-checkout-btn" type="button" disabled>Scan Radio to Check Out</button>
               </div>
               <button id="employeeReturnBtn" class="primary-btn employee-return-btn" type="button" hidden>Scan Barcode to Return</button>
               <div id="employeeReturnAlert" class="employee-return-alert" role="status" aria-live="assertive" hidden></div><div id="employeeActionMessage" class="form-message" role="status" aria-live="polite"></div>
@@ -429,7 +429,10 @@
     <div class="dialog-head"><div><p class="section-kicker light">Asset scanner</p><h3>Scan Radio QR Code</h3></div><button id="closeScanner" class="icon-btn">×</button></div>
     <div class="scanner-frame"><video id="scannerVideo" playsinline muted></video><div class="scan-reticle qr-scan-reticle"></div></div>
     <p class="scanner-guide">Center the QR code inside the highlighted box and hold the radio steady.</p>
-    <p id="scannerStatus">Allow camera access, then point the camera at the radio QR code.</p><p id="scannerDiagnostic" class="scanner-diagnostic" aria-live="polite">Waiting for camera…</p>
+    <p id="scannerStatus">Allow camera access, then point the camera at the radio QR code.</p>
+    <p id="scannerDiagnostic" class="scanner-diagnostic" aria-live="polite">Waiting for camera…</p>
+    <p id="diagnosticFrameCount" class="scanner-diagnostic">Frames analyzed: 0</p>
+    <p id="diagnosticQrResult" class="scanner-diagnostic"><strong>QR READ:</strong> nothing yet</p>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -438,6 +441,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" crossorigin="anonymous"></script>
   <script type="module" src="src/app.js"></script>
 </body>
