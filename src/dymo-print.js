@@ -10,8 +10,32 @@ export function printDymoXml(framework,xml,printer){
   label.print(printer.name);
   return printer.name;
 }
-export async function getDymoPrinter(framework){
-  if(!framework?.getPrinters) throw new Error('DYMO Label Web Service is not available.');
+export function initializeDymo(framework,{timeoutMs=8000}={}){
+  if(!framework?.init||!framework?.checkEnvironment) return Promise.reject(new Error('DYMO Label Framework did not load.'));
+  return new Promise((resolve,reject)=>{
+    let settled=false;
+    const timer=setTimeout(()=>{if(!settled){settled=true;reject(new Error('DYMO Label Web Service initialization timed out.'));}},timeoutMs);
+    const finish=()=>{
+      if(settled)return;
+      try{
+        const env=framework.checkEnvironment();
+        if(!env?.isBrowserSupported||!env?.isFrameworkInstalled||env?.isWebServicePresent===false){
+          settled=true;clearTimeout(timer);
+          reject(new Error(env?.errorDetails||'DYMO Label Web Service is not available.'));
+          return;
+        }
+        settled=true;clearTimeout(timer);resolve(env);
+      }catch(err){settled=true;clearTimeout(timer);reject(err);}
+    };
+    try{
+      const result=framework.init(finish);
+      if(result&&typeof result.then==='function') result.then(finish).catch(err=>{if(!settled){settled=true;clearTimeout(timer);reject(err);}});
+    }catch(err){settled=true;clearTimeout(timer);reject(err);}
+  });
+}
+export async function getDymoPrinter(framework,options){
+  await initializeDymo(framework,options);
+  if(!framework?.getPrinters) throw new Error('DYMO printer discovery is unavailable.');
   const printers=await Promise.resolve(framework.getPrinters());
   const printer=findLabelWriter(printers);
   if(!printer) throw new Error('No DYMO LabelWriter printer was detected.');
