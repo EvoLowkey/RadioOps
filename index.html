@@ -404,6 +404,16 @@
     <div class="legal-content"><div id="qrBulkPrintArea" class="qr-bulk-grid"></div><button id="downloadAllDymoBtn" class="primary-btn" type="button">Download All DYMO Labels</button></div>
   </dialog>
 
+
+  <dialog id="dymoSoftwareDialog" class="legal-dialog">
+    <div class="dialog-head"><div><p class="section-kicker light">DYMO 30336 label</p><h3 id="dymoSoftwareTitle">Open in DYMO Label Software</h3></div><button id="closeDymoSoftwareDialog" class="icon-btn" type="button">×</button></div>
+    <div class="legal-content">
+      <p id="dymoSoftwareMessage">Your radio label is ready. Download the .label file, open it in DYMO Label Software, confirm DYMO 30336, then print.</p>
+      <ol id="dymoSoftwareSteps"><li>Download the DYMO .label file.</li><li>Open the downloaded file in DYMO Label Software.</li><li>Confirm DYMO 30336 and print.</li></ol>
+      <label class="agreement-check"><input id="dymoDontShowAgain" type="checkbox"><span>Don't show these instructions again on this device.</span></label>
+      <div class="dialog-actions"><button id="confirmDymoDownloadBtn" class="primary-btn" type="button">Download DYMO Label</button><button id="cancelDymoDownloadBtn" class="secondary-btn" type="button">Cancel</button></div>
+    </div>
+  </dialog>
   <dialog id="legalDialog" class="legal-dialog">
     <div class="dialog-head"><div><p class="section-kicker light">Valet Radio HQ</p><h3 id="legalDialogTitle">Privacy</h3></div><button id="closeLegalDialog" class="icon-btn" type="button">×</button></div>
     <div id="legalDialogContent" class="legal-content"></div>

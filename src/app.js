@@ -25,6 +25,8 @@ let state={radios:[],history:[]},mode='out',scannerTarget='manager',scannerStrea
 let selectedShiftCode=null,currentAgreement=null,accountabilityState=null,operationalCheckedOut=[],operationalHistory=[],disciplinaryRecords=[],lastNotifiedStatus=null;
 let managerIncidents=[],managerDiscipline=[],qrStatus=[];
 let currentDymoLabel=null;
+let pendingDymoDownload=null;
+const DYMO_PROMPT_KEY='vrhqDymoPromptDismissed';
 
 function updateClock(){if($('#systemTime'))$('#systemTime').textContent=new Intl.DateTimeFormat(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date());}
 function showToast(text){const el=$('#toast');if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);}
@@ -176,6 +178,20 @@ function downloadBlob(filename,content,type='application/octet-stream'){
   link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+function showDymoSoftwarePrompt(downloadAction,{bulk=false}={}){
+  if(localStorage.getItem(DYMO_PROMPT_KEY)==='1'){downloadAction();return;}
+  pendingDymoDownload=downloadAction;
+  $('#dymoSoftwareTitle').textContent='Open in DYMO Label Software';
+  $('#dymoSoftwareMessage').textContent=bulk
+    ?'Your ZIP contains 40 DYMO .label files. Download and extract the ZIP, then open each .label file in DYMO Label Software.'
+    :'Your radio label is ready. Download the .label file, open it in DYMO Label Software, confirm DYMO 30336, then print.';
+  $('#dymoSoftwareSteps').innerHTML=bulk
+    ?'<li>Download the ZIP containing 40 DYMO .label files.</li><li>Extract the ZIP.</li><li>Open the needed .label files in DYMO Label Software, confirm DYMO 30336, and print.</li>'
+    :'<li>Download the DYMO .label file.</li><li>Open the downloaded file in DYMO Label Software.</li><li>Confirm DYMO 30336 and print.</li>';
+  $('#confirmDymoDownloadBtn').textContent=bulk?'Download 40 DYMO Labels':'Download DYMO Label';
+  $('#dymoDontShowAgain').checked=false;
+  $('#dymoSoftwareDialog').showModal();
+}
 function downloadDymoLabel(radioId,token){
   downloadBlob(dymoFilename(radioId),buildDymo30336Label(radioId,token),'application/xml');
 }
@@ -207,8 +223,10 @@ async function generateAllQrLabels(){
   try{
     const results=await api.rotateAllRadioQrTokens();
     const items=results.map(result=>({radioId:result.radio_id,token:result.token}));
-    await downloadAllDymoLabels(items);
-    showToast('40 DYMO .label files downloaded as one ZIP.');
+    showDymoSoftwarePrompt(async()=>{
+      await downloadAllDymoLabels(items);
+      showToast('40 DYMO .label files downloaded as one ZIP.');
+    },{bulk:true});
     await loadData({quiet:true});
   }catch(err){showToast(humanError(err));}
   finally{btn.disabled=false;btn.textContent='Download All DYMO Labels';}
@@ -324,10 +342,21 @@ $('#closeQrLabelDialog')?.addEventListener('click',()=>{$('#qrPrintArea').innerH
 $('#closeQrBulkDialog')?.addEventListener('click',()=>{$('#qrBulkPrintArea').innerHTML='';$('#qrBulkDialog').close();});
 $('#downloadDymoLabelBtn')?.addEventListener('click',()=>{
   if(!currentDymoLabel)return;
-  downloadDymoLabel(currentDymoLabel.radioId,currentDymoLabel.token);
-  showToast(`${currentDymoLabel.radioId}: DYMO label downloaded`);
+  const item={...currentDymoLabel};
+  showDymoSoftwarePrompt(()=>{
+    downloadDymoLabel(item.radioId,item.token);
+    showToast(`${item.radioId}: DYMO label downloaded`);
+  });
 });
 $('#downloadAllDymoBtn')?.addEventListener('click',generateAllQrLabels);
+$('#closeDymoSoftwareDialog')?.addEventListener('click',()=>{pendingDymoDownload=null;$('#dymoSoftwareDialog').close();});
+$('#cancelDymoDownloadBtn')?.addEventListener('click',()=>{pendingDymoDownload=null;$('#dymoSoftwareDialog').close();});
+$('#confirmDymoDownloadBtn')?.addEventListener('click',async()=>{
+  const action=pendingDymoDownload;pendingDymoDownload=null;
+  if($('#dymoDontShowAgain').checked)localStorage.setItem(DYMO_PROMPT_KEY,'1');
+  $('#dymoSoftwareDialog').close();
+  if(action)await action();
+});
 $('#closeExceptionDialog')?.addEventListener('click',()=>$('#exceptionDialog').close());
 $('#exceptionDiscipline')?.addEventListener('change',()=>{const level=$('#exceptionDiscipline').value;$('#financialReviewRequired').disabled=level!=='WRITE_UP';if(level!=='WRITE_UP')$('#financialReviewRequired').checked=false;$('#disciplineManagerNotes').required=level!=='NONE';});
 $('#exceptionForm')?.addEventListener('submit',async e=>{e.preventDefault();const assignmentId=$('#exceptionAssignmentId').value,type=$('#exceptionType').value,status=$('#exceptionRadioStatus').value,explanation=$('#exceptionExplanation').value.trim(),level=$('#exceptionDiscipline').value,notes=$('#disciplineManagerNotes').value.trim(),financial=$('#financialReviewRequired').checked;if(!explanation){$('#exceptionMessage').textContent='Manager explanation is required.';$('#exceptionMessage').className='form-message error';return;}if(level!=='NONE'&&!notes){$('#exceptionMessage').textContent='Manager notes are required for a warning or write-up.';$('#exceptionMessage').className='form-message error';return;}try{const incident=await api.resolveRadioReturnException(assignmentId,type,status,explanation);if(level!=='NONE')await api.createRadioDiscipline(incident.id,level,notes,financial);$('#exceptionDialog').close();showToast('Radio exception resolved and recorded');await loadData({quiet:true});}catch(err){$('#exceptionMessage').textContent=humanError(err);$('#exceptionMessage').className='form-message error';}});
